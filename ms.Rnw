@@ -953,10 +953,6 @@ bake(file = "output/round_03/ovov_03_el.rds",{
 
 \section{Introduction}
 
-%% \ed{WE WILL NEED TO WORD THIS CAREFULLY. WE MUST BE FORCEFUL ABOUT THE VALUE OF CORRECTING THE SCIENTIFIC RECORD, WITHOUT SEEMING UNNECESSARILY CONFRONTATIONAL. ONE WAY TO DO THIS IS TO BE COMPLIMENTARY ABOUT PAL AS MUCH AS POSSIBLE. AFTER ALL, IF THE METHOD HAS SOME GOOD PROPERTIES THEN THIS ADDS VALUE TO UNDERSTANDING PROPERLY ITS LIMITATIONS. I'VE REWRITTEN THE ABSTRACT FROM THAT PERSPECTIVE.}
-
-%% \ed{AT THIS POINT, THE DRAFT IS QUITE PROVISIONAL, PUTTING THINGS IN PLACE SO IT CAN BE REFINED LATER.}
-
 This article results from an investigation of the results in Table~1 of \citet{wwr}.
 The authors of that paper were given the opportunity to submit a correction, after we shared the results of our investigation with them, but they declined.
 Our task here is to correct the error in Table~1 so that researchers considering whether to implement Poisson approximate likelihood (PAL) are appropriately informed about its benefits.
@@ -980,6 +976,17 @@ The large discrepancy in log-likelihood disappears at this point (see our Table~
 This re-analysis does, however, show a small advantage for PAL.
 We continued our investigation to establish the cause of this.
 
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.55\textwidth]{thesis-figs/PAL_vs_SMC_ovov_100.png}
+\caption{\label{fig:PAL_vs_SMC_ovov_100}Log-likelihoods computed using two filtering methods for 100 randomly simulated datasets at the MLE of the OvOv model.
+The particle filter and PAL used 50,000 particles.
+The red line is the line $Lik(pfilter)=Lik(palfilter)$.
+On average, the particle filter likelihood is 7.7 log units higher than the PAL.
+%%  -6224.245 - (-6231.97) = 7.725
+}
+\end{figure}
+
 
 PAL provides an approximate filter, whereas the particle filter provides a Monte~Carlo estimate of an exact filter.
 Possible explanations for PAL obtaining a higher log-likelihood than a particle filter include:
@@ -991,44 +998,27 @@ Log-likelihood is a proper scoring rule for forecasts \cite{gneiting2}, and both
 %% resulting in estimates of the conditional log-likelihood, $f_{Y
 Therefore, if the model is correctly specified, the approximation error in PAL can only decrease the expected log-likelihood.
 We tested this on simulated data, for which the model of \cite{wwr} is correctly specified.
-We found that, in this case, the particle filter out-performs PAL \ed{SHOW RESULTS}.
+We found that, in this case, the particle filter out-performs PAL (Figure~\ref{fig:PAL_vs_SMC_ovov_100}).
 This supports hypothesis 2, above.
-We looked for model misspecification by comparing the conditional log-likelihood estimates at each time point, as described in the Methods section.
-Figure~ \ref{fig:cond_SMC_PAL_realdat} indicates that the model provides a poor explanation of the data right at the start of the time series.
+Consequently, we looked for model misspecification by comparing the conditional log-likelihood estimates at each time point, as described in the Methods section.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.9\textwidth]{thesis-figs/cond_SMC_PAL_realdat.png}
+\caption{\label{fig:cond_SMC_PAL_realdat}Conditional log-likelihoods computed using two methods for the real rotavirus dataset, with the SMC method replicated 36 times due to its high variances. The blue line represents overlapping results from 36 SMC computations, while the red line is derived from PAL. The main sources of likelihood shortfall of SMC are at time points $t=1, 2, 3, 11, 81, 194$, and $325-333$.}
+\end{figure}
+
+Figure~ \ref{fig:cond_SMC_PAL_realdat} indicates that the worst conditional log-likelihood values, estimated using the particle filter, arise at the start of the time series.
 This could be a problem with data collection, or some subtle issue with the science of the epidemiological system, but a simple possibility is that the initial values of the latent state process might be poorly specified.
 For this model, the initial values were fixed based on scientific reasoning, rather than being estimated.
-If we instead estimate the initial values, we obtain the results in \ed{XXXX}. 
-
-\ed{WE CAN REVIEW EXACTLY WHICH NUMBERS TO SHOW. IDEALLY, AS LITTLE AS POSSIBLE IN ORDER TO MAKE A STRONG ARGUMENT.}
-
-We conclude that PAL is a potentially useful algorithm, with some favorable theoretical properties.
-However, the corrected evidence does not indicate an advantage for using PAL in situations where the particle filter is effective.
-
-
-\section{Methods}
-
-\ed{BRIEFLY DESCRIBE HERE ANY DETAILS NEEDED TO DESCRIBE THE RESULTS. COMMENT ON CODE AVAILABILITY.}
-
-To evaluate whether SMC performs as well as PAL in terms of both computational time and likelihood identifiability, we replicated the model using the R package \textbf{pomp} \citep{pomppackagepaper}. First, we verified that the two models are essentially identical. Here, we simulated data from the model 1000 times at the MLE shown in Table \ref{tab:mlebywwr} and compared the summary statistics of 1000 simulated time series from two models using the t-test. Summary statistics including the mean, median, and variance for all three age groups were tested. The results showed no significant differences between the two models from which the data were simulated, confirming that both the latent process model and the observation model are essentially consistent with each other, given that the observations were directly simulated.
-
-From Table \ref{tab:model_performance}, it is evident that the OvOv model, with overdispersion in both the dynamic system and the measurement model, yields the lowest AIC.
-We therefore focus on this version of the model.
-
-To examine the model misspecification at potential time points, as depicted in Figure \ref{fig:cond_SMC_PAL_realdat}, the majority of significant drops of the SMC occurred at time ($t=1, \,\,2, \,\,3, \,\,11, \,\,81, \,\,194, \,\,325-333$). The significant drops observed initially, specifically at times $t=1, 2, 3$, may suggest an improper initial distribution from which the first set of particles was simulated. At times $t=11, \,\,81, \,\,194$ and $t=325-333$, the shortfall approximated $50-100$ log-units.
-These failures can be attributed to outliers that the model cannot explain, as shown in \ed{XXXX}.
-This suggests model misspecification, particularly in the latent process, which fails to generate suitable particles capable of producing a high likelihood of observing the true reported cases from the data.
-Subsequent issues observed at later times could indicate problems caused by fixed seasonality, which cannot be compensated for by adding more stochastic elements. 
-
-This article has focused on likelihood evaluation, but the inferences presented also require the likelihood estimate to maximized.
-\cite{stocks} used iterated filtering to maximize the particle filter likelihood estimate, whereas \cite{wwr} used direct numerical maximization.
-We follow the approaches adopted by these two papers.
-The optimization method is not directly pertinent to the comparison of the filtering methods, so we do not discuss optimization in further detail here.
-
+If we instead estimate the initial values, we obtain the results in Table~\ref{tab:mlebywwr}. 
 
 \begin{table}[htbp]
   \centering
   \begin{threeparttable}
-    \caption{Maximum likelihood estimation of parameters by PAL for three models \citep{wwr}, and by mif2 algorithm \citep{pomppackagepaper} for the OvOv model.}
+    \caption{Maximum likelihood estimation of parameters by PAL for three models \citep{wwr}, and by mif2 algorithm \citep{pomppackagepaper} for the OvOv model.
+    \ed{LET'S DISCUSS WHETHER WE WANT TO SHOW JUST OV-OV HERE. IT WOULD BE SIMPLER.}
+    }
     \label{tab:mlebywwr}
     \begin{tabular}{>{\raggedright\arraybackslash}p{2cm} *{3}{>{\centering\arraybackslash}p{1.5cm}} >{\centering\arraybackslash}p{2.5cm}}
       \toprule
@@ -1065,7 +1055,33 @@ The optimization method is not directly pertinent to the comparison of the filte
 \end{table}
 
 
-Our results demonstrate how SMC is sensitive to model misspecification, which consequently leads to a low likelihood estimate at the MLE, as shown in Table \ref{tab:ovovrealdata} by fitting the real German rotavirus dataset into the model.
+
+\ed{WE CAN REVIEW EXACTLY WHICH NUMBERS TO SHOW. IDEALLY, AS LITTLE AS POSSIBLE IN ORDER TO MAKE A STRONG ARGUMENT.}
+
+
+
+We conclude that PAL is a potentially useful algorithm, with some favorable theoretical properties.
+However, the corrected evidence does not indicate an advantage for using PAL in situations where the particle filter is effective.
+
+%%%%%%%%% 222222222 %%%%%%%%%%5
+
+\section*{Methods}
+
+\ed{BRIEFLY DESCRIBE HERE ANY DETAILS NEEDED TO DESCRIBE THE RESULTS. COMMENT ON CODE AVAILABILITY.}
+
+To evaluate whether SMC performs as well as PAL in terms of both computational time and likelihood identifiability, we replicated the model using the R package \textbf{pomp} \citep{pomppackagepaper}. First, we verified that the two models are essentially identical. Here, we simulated data from the model 1000 times at the MLE shown in Table \ref{tab:mlebywwr} and compared the summary statistics of 1000 simulated time series from two models using the t-test. Summary statistics including the mean, median, and variance for all three age groups were tested. The results showed no significant differences between the two models from which the data were simulated, confirming that both the latent process model and the observation model are essentially consistent with each other, given that the observations were directly simulated.
+
+From Table \ref{tab:model_performance}, it is evident that the OvOv model, with overdispersion in both the dynamic system and the measurement model, yields the lowest AIC.
+We therefore focus on this version of the model.
+
+This article has focused on likelihood evaluation, but the inferences presented also require the likelihood estimate to maximized.
+\cite{stocks} used iterated filtering to maximize the particle filter likelihood estimate, whereas \cite{wwr} used direct numerical maximization.
+We follow the approaches adopted by these two papers.
+The optimization method is not directly pertinent to the comparison of the filtering methods, so we do not discuss optimization in further detail here.
+
+An extended description of our reanalysis of \cite{wwr} is provided by \cite{hao24}.
+That thesis also contains some additional results reinforcing the conclusions presented in this article.
+
 
 \begin{table}[ht] % The placement specifier can be [h!tbp]
 \centering % Centers the table
@@ -1080,54 +1096,6 @@ Our results demonstrate how SMC is sensitive to model misspecification, which co
 \end{tabular}
 \end{table}
 
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.9\textwidth]{thesis-figs/cond_SMC_PAL_realdat.png}
-\caption{\label{fig:cond_SMC_PAL_realdat}Conditional log-likelihoods computed using two methods for the real rotavirus dataset, with the SMC method replicated 36 times due to its high variances. The blue line represents overlapping results from 36 SMC computations, while the red line is derived from PAL. The main sources of likelihood shortfall of SMC are at time points $t=1, 2, 3, 11, 81, 194$, and $325-333$.}
-\end{figure}
-
-\vspace{-8mm}
-\subsection{PAL versus SMC: When the Model is Correctly Specified}\label{section3}
-
-Here, we utilize 100 simulated datasets from the OvOv model with parameters set at the MLE, thereby eliminating model misspecification. We then examine the likelihood values computed by PAL and SMC.
-
-
-\begin{table}[htbp] % The placement specifier can be [h!tbp]
-\centering % Centers the table
-\caption{Average log-likelihood at the MLE at the 100 simulated datasets from OvOv computed by two filtering methods, employed 36 replicates and 50,000 particles} % This is effectively the table title
-\label{tab:ovovtrue} % For referencing this table elsewhere in your text
-\begin{tabular}{|c c c|} 
- \hline
-  & PAL & SMC  \\ 
- \hline
- OvOv & -6231.97 & -6224.245 \\ 
- \hline
-\end{tabular}
-\end{table}
-\begin{figure}[H]
-\centering
-\vspace{-7mm}
-\includegraphics[width=0.55\textwidth]{thesis-figs/PAL_vs_SMC_ovov_100.png}
-\caption{\label{fig:PAL_vs_SMC_ovov_100}Log-likelihoods computed using two filtering methods for 100 randomly simulated datasets at the MLE of the OvOv model. The red line is the line $Lik(pfilter)=Lik(palfilter)$. We can see on the simulated data, SMC gives consistently higher likelihood estimates than PAL.}
-\end{figure}
-
-
-
-Notably, Section~\ref{misspecified} reveals that when the model confronts actual rotavirus data, it encounters misspecification issues, particularly at times $t=1, \,\,2, \,\,3, \,\,11, \,\,81, \,\,194, \,\,325-333$, leading to shortfalls in likelihood. Appendix \ref{appendB} discusses this phenomenon, attributing it to certain data points that the model fails to adequately represent. This issue is especially pronounced at the initial time points. Particularly, in the initial time points $t=1,2,3$, the likelihood deviates from PAL estimates for about more than 100 log-likelihood units, suggesting an improper choice of initial distribution that might favor the PAL estimate. Consequently, we have opted to estimate the initial distribution \(\lambda_0 = (S_{10}, I_{10}, R_{10}, S_{20}, I_{20}, R_{20}, S_{30}, I_{30}, R_{30})\), where $S_{10}, I_{10}, R_{10}, S_{20}, I_{20}, R_{20}, S_{30}, I_{30}$, and $R_{30}$ represent the number of individuals in each compartment at time $t=0$. The results of this new estimation can be found in Table \ref{tab:mlebywwr}. Importantly, the maximization of the likelihood conducted via the Iterated Filtering (mif2) algorithm \citep{pomppackagepaper} procures a higher likelihood at the estimated MLE than that estimated by PAL, and a different yet comparable set of estimates is obtained. In terms of parameters pertinent to epidemiological interests, i.e. the first 7 rows in Table \ref{tab:mlebywwr}, we observe a lower force of infection parameter for the first age group, $\beta_1$, alongside a higher force of infection for the third age group, $\beta_3$. Additionally, we detect variations in the phase parameter $\phi$, which directly affects the seasonal time points, as well as in the stochastic parameter $\sigma_{\xi}$ and the initial compartmental distributions. The modifications to the initial distributions aim to rectify inadequate initialization, while the other adjustments address model misspecifications identified in Section \ref{misspecified}. Changes in the remaining parameter set are negligible.
-
-
-
-
-PAL is an approximate filtering method used in scenarios where SMC is computationally prohibitive. It approximates the posterior distribution by a Poisson approximation. Due to its approximative nature, it does not perfectly capture the true posterior distribution. 
-SMC, however, often referred to as the "perfect filter," uses a large set of particles and sophisticated resampling techniques to theoretically accurately approximate the posterior distribution. It is computationally more intensive than PAL but tends to provide a satisfying approximation, especially in complex models that are not compatible with PAL in general. When PAL and SMC are applied to a well-specified model meaning the model with the latent process model being correctly represented, SMC outperforms PAL because it better captures the nuances of the posterior distribution. This is why SMC might show a "likelihood shortfall" compared to PAL when the model is correctly specified. This is due to the approximation error of PAL can't be improved arbitrarily in general \citep{annurev:/content/journals/10.1146/annurev-control-042920-015119}, and likelihood being a proper scoring rule.
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=\textwidth]{thesis-figs/plot_zoom_png.png}
-\caption{\label{fig:zoomedin_outlier_plot} Zoomed-in time-Cases plot at time $t=0-20, 75-85, 190-200$ and $320-340$. In the visualization, solid lines represent the true reported cases from the original rotavirus dataset, while the shaded strips with dashed boundaries-colored according to different groups—indicate enlarged "confidence intervals" for these cases. Specifically, the upper boundary of each strip corresponds to the upper 97.5\% percentile of 36 replicates of the filtered accumulated number of cases, $H_{kt}$, for $k=1,2,3$, and $t=1,2,...,416$, as introduced in Section \ref{observationmodel}. This boundary is further adjusted by the upper 97.5\% percentile of the reporting rate $q_t$, estimated by \cite{wwr} in Table \ref{tab:mlebywwr}. The reporting rate $q_t$ is assumed to follow a truncated normal distribution with a mean of 0.07 and a standard deviation of $\sigma_q = 0.021$, resulting in a lower 2.5\% percentile of 0.029 and an upper 97.5\% percentile of 0.111. The methodology for establishing the lower boundary of the strip mirrors that of the upper boundary. Although this approach is not entirely rigorous, each strip is intended to encompass our extended confidence interval for the true reported cases. Consequently, data points that fall outside these strips give us a intuition of where the model misspecifications may occur.}
-\end{figure}
-
-As illustrated in Figure \ref{fig:cond_SMC_PAL_realdat}, shortfalls are observed at times $t=1,\,\,2,\,\,3,\,\,11,\,\,81,\,\,194,$ and $325-333$. These discrepancies are primarily attributable to outliers that the model fails to accommodate. In the displayed results, it is immediately apparent that at the initial times $t=1, \,\,2, \,\,3$ all the true reported cases deviated from the expected range, falling outside the designated strip. Specifically, at time $t=11$, the model is misspecified for case 1, depicted by the solid red line. Similarly, at times $t=81,\,\, 82$, the model is misspecified for case 3, as indicated by the solid blue line that extended beyond the strip's boundaries. At $t=194$, the solid green line denotes case 2 as where the model is misspecified. During the period from $t=325-333$, all three observed cases are where the model misspecifications happen. These deviations provide a clear illustration of the likelihood shortfall of the sequential Monte Carlo (SMC) method when the model does not align with the data, suggesting a model misspecification. 
 
 \bibliography{bib-pal}
 
