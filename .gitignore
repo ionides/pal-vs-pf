@@ -8,6 +8,7 @@
 *.Rhistory
 *.blg
 ms.tex
+ms-concordace.tex
 *~
 cache/*
 figure/*
