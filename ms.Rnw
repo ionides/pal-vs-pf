@@ -429,6 +429,7 @@ bake(file = "output/round_01/ovov_mif_01.rds",{
 })
 
 bake(file = "output/round_01/ovov_01_el.rds",{
+  set.seed(33124)
   el_01 <- measlespkg::eval_logLik(mifs_global_01, ncores=ncores, np_pf = NP_MIF, nreps=ncores)
   el_01
 })
@@ -451,26 +452,28 @@ mcopts <- list(set.seed=TRUE)
 
 bake(file = "output/round_02/ovov_mif_02.rds",{ 
   mifs_global_02 <- foreach(i=1:ncores,.packages='pomp', .options.multicore=mcopts) %dopar% {
-  panelPomp::mif2(
-    sir_panel,
-    Np = NP_MIF,
-    cooling.fraction.50 = 0.5,
-    rw.sd = rw_sd(beta1=0.01*sd_02,beta2=0.01*sd_02,beta3=0.01*sd_02,
-                  beta11=0.01*sd_02,phi=0.01*sd_02,sigma_q=0.01*sd_02,sigma_xi=0.01*sd_02,
-                  S10=ivp(0.24)*sd_02,I10=ivp(0.24)*sd_02,R10=ivp(0.24)*sd_02,
-                  S20=ivp(0.24)*sd_02,I20=ivp(0.24)*sd_02,R20=ivp(0.24)*sd_02,
-                  S30=ivp(0.24)*sd_02,I30=ivp(0.24)*sd_02,R30=ivp(0.24)*sd_02),
-    cooling.type = "geometric",
-    Nmif = NMIF,
-    shared.start = numeric(0),
-    specific.start = starting_values_02[[i]],
-    block = F
-  ) 
-}
+    set.seed(202407222+1234*i)
+    panelPomp::mif2(
+      sir_panel,
+      Np = NP_MIF,
+      cooling.fraction.50 = 0.5,
+      rw.sd = rw_sd(beta1=0.01*sd_02,beta2=0.01*sd_02,beta3=0.01*sd_02,
+                    beta11=0.01*sd_02,phi=0.01*sd_02,sigma_q=0.01*sd_02,sigma_xi=0.01*sd_02,
+                    S10=ivp(0.24)*sd_02,I10=ivp(0.24)*sd_02,R10=ivp(0.24)*sd_02,
+                    S20=ivp(0.24)*sd_02,I20=ivp(0.24)*sd_02,R20=ivp(0.24)*sd_02,
+                    S30=ivp(0.24)*sd_02,I30=ivp(0.24)*sd_02,R30=ivp(0.24)*sd_02),
+      cooling.type = "geometric",
+      Nmif = NMIF,
+      shared.start = numeric(0),
+      specific.start = starting_values_02[[i]],
+      block = F
+    ) 
+  }
   mifs_global_02
 })
 
 bake(file = "output/round_02/ovov_02_el.rds",{
+  set.seed(4321)
   el_02 <- measlespkg::eval_logLik(mifs_global_02, ncores = ncores, np_pf = NP_MIF, nreps=ncores)
   el_02
 })
@@ -492,26 +495,28 @@ mcopts <- list(set.seed=TRUE)
 
 bake(file = "output/round_03/ovov_mif_03.rds",{ 
   mifs_global_03 <- foreach(i=1:ncores,.packages='pomp', .options.multicore=mcopts) %dopar% {
-  panelPomp::mif2(
-    sir_panel,
-    Np = NP_MIF,
-    cooling.fraction.50 = 0.5,
-    rw.sd = rw_sd(beta1=0.01*sd_03,beta2=0.01*sd_03,beta3=0.01*sd_03,
-                  beta11=0.01*sd_03,phi=0.01*sd_03,sigma_q=0.01*sd_03,sigma_xi=0.01*sd_03,
-                  S10=ivp(0.24)*sd_03,I10=ivp(0.24)*sd_03,R10=ivp(0.24)*sd_03,
-                  S20=ivp(0.24)*sd_03,I20=ivp(0.24)*sd_03,R20=ivp(0.24)*sd_03,
-                  S30=ivp(0.24)*sd_03,I30=ivp(0.24)*sd_03,R30=ivp(0.24)*sd_03),
-    cooling.type = "geometric",
-    Nmif = NMIF,
-    shared.start = numeric(0),
-    specific.start = starting_values_03[[i]],
-    block = F
-  ) 
-}
+    set.seed(2207+4321*i)
+    panelPomp::mif2(
+      sir_panel,
+      Np = NP_MIF,
+      cooling.fraction.50 = 0.5,
+      rw.sd = rw_sd(beta1=0.01*sd_03,beta2=0.01*sd_03,beta3=0.01*sd_03,
+                    beta11=0.01*sd_03,phi=0.01*sd_03,sigma_q=0.01*sd_03,sigma_xi=0.01*sd_03,
+                    S10=ivp(0.24)*sd_03,I10=ivp(0.24)*sd_03,R10=ivp(0.24)*sd_03,
+                    S20=ivp(0.24)*sd_03,I20=ivp(0.24)*sd_03,R20=ivp(0.24)*sd_03,
+                    S30=ivp(0.24)*sd_03,I30=ivp(0.24)*sd_03,R30=ivp(0.24)*sd_03),
+      cooling.type = "geometric",
+      Nmif = NMIF,
+      shared.start = numeric(0),
+      specific.start = starting_values_03[[i]],
+      block = F
+    ) 
+  }
   mifs_global_03
 })
 
 bake(file = "output/round_03/ovov_03_el.rds",{
+  set.seed(1234)
   el_03 <- measlespkg::eval_logLik(mifs_global_03, ncores = ncores, np_pf = NP_MIF, nreps=ncores)
   el_03
 })
