@@ -429,8 +429,8 @@ bake(file = "output/round_01/ovov_mif_01.rds",{
 })
 
 bake(file = "output/round_01/ovov_01_el.rds",{
-  el <- measlespkg::eval_logLik(mifs_global_01, ncores=ncores, np_pf = NP_MIF, nreps=ncores)
-  el
+  el_01 <- measlespkg::eval_logLik(mifs_global_01, ncores=ncores, np_pf = NP_MIF, nreps=ncores)
+  el_01
 })
 @
 
@@ -471,8 +471,8 @@ bake(file = "output/round_02/ovov_mif_02.rds",{
 })
 
 bake(file = "output/round_02/ovov_02_el.rds",{
-  el <- measlespkg::eval_logLik(mifs_global_02, ncores = ncores, np_pf = NP_MIF, nreps=ncores)
-  el
+  el_02 <- measlespkg::eval_logLik(mifs_global_02, ncores = ncores, np_pf = NP_MIF, nreps=ncores)
+  el_02
 })
 @
 
@@ -512,8 +512,8 @@ bake(file = "output/round_03/ovov_mif_03.rds",{
 })
 
 bake(file = "output/round_03/ovov_03_el.rds",{
-  el <- measlespkg::eval_logLik(mifs_global_03, ncores = ncores, np_pf = NP_MIF, nreps=ncores)
-  el
+  el_03 <- measlespkg::eval_logLik(mifs_global_03, ncores = ncores, np_pf = NP_MIF, nreps=ncores)
+  el_03
 })
 @
 
@@ -610,11 +610,11 @@ If we instead estimate the initial values, we obtain the results in Table~\ref{t
       \multicolumn{1}{l}{\(I_{10}\)} & \multicolumn{3}{c}{$30351$}     & $$\Sexpr{est_mle_vec["I10[unit1]"]}$$\\
       \multicolumn{1}{l}{\(R_{10}\)} & \multicolumn{3}{c}{$1315221$}   & $$\Sexpr{est_mle_vec["R10[unit1]"]}$$\\
       \multicolumn{1}{l}{\(S_{20}\)} & \multicolumn{3}{c}{$57139612$}  & $$\Sexpr{est_mle_vec["S20[unit1]"]}$$\\
-      \multicolumn{1}{l}{\(I_{20}\)} & \multicolumn{3}{c}{$871$}       & $$\Sexpr{est_mle_vec["sigma_xi[unit1]"]}$$\\
-      \multicolumn{1}{l}{\(R_{20}\)} & \multicolumn{3}{c}{$302852$}    & $$\Sexpr{est_mle_vec["sigma_xi[unit1]"]}$$\\
-      \multicolumn{1}{l}{\(S_{30}\)} & \multicolumn{3}{c}{$19573727$}  & $$\Sexpr{est_mle_vec["sigma_xi[unit1]"]}$$\\
-      \multicolumn{1}{l}{\(I_{30}\)} & \multicolumn{3}{c}{$2550$}      & $$\Sexpr{est_mle_vec["sigma_xi[unit1]"]}$$\\
-      \multicolumn{1}{l}{\(R_{30}\)} & \multicolumn{3}{c}{$131092$}    & $$\Sexpr{est_mle_vec["sigma_xi[unit1]"]}$$\\
+      \multicolumn{1}{l}{\(I_{20}\)} & \multicolumn{3}{c}{$871$}       & $$\Sexpr{est_mle_vec["I20[unit1]"]}$$\\
+      \multicolumn{1}{l}{\(R_{20}\)} & \multicolumn{3}{c}{$302852$}    & $$\Sexpr{est_mle_vec["R20[unit1]"]}$$\\
+      \multicolumn{1}{l}{\(S_{30}\)} & \multicolumn{3}{c}{$19573727$}  & $$\Sexpr{est_mle_vec["S30[unit1]"]}$$\\
+      \multicolumn{1}{l}{\(I_{30}\)} & \multicolumn{3}{c}{$2550$}      & $$\Sexpr{est_mle_vec["I30[unit1]"]}$$\\
+      \multicolumn{1}{l}{\(R_{30}\)} & \multicolumn{3}{c}{$131092$}    & $$\Sexpr{est_mle_vec["R30[unit1]"]}$$\\
       \midrule
       \addlinespace
       \textbf{AIC}  & $98866.65$ & $15154.75$ & $13778.08$ & $\Sexpr{(-2)*((length(wwr_mle) - length(params_fixed)) - est_mle_vec["logLik"])}$\\
