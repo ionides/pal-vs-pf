@@ -466,7 +466,7 @@ bake(file = paste0("output/round_02/RUN_LEVEL_",RUN_LEVEL,"/ovov_mif_02.rds"),{
                     S30=ivp(0.24)*sd_02,I30=ivp(0.24)*sd_02,R30=ivp(0.24)*sd_02),
       cooling.type = "geometric",
       Nmif = NMIF,
-      params = starting,
+      params = starting_values_02[[i]],
       block = F
     ) 
   }
@@ -505,7 +505,7 @@ bake(file = paste0("output/round_03/RUN_LEVEL_",RUN_LEVEL,"/ovov_mif_03.rds"),{
                     S30=ivp(0.24)*sd_03,I30=ivp(0.24)*sd_03,R30=ivp(0.24)*sd_03),
       cooling.type = "geometric",
       Nmif = NMIF,
-      params = starting,
+      params = starting_values_03[[i]],
       block = F
     ) 
   }
