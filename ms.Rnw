@@ -130,20 +130,30 @@ library(ggplot2)
 library(scales)
 library(foreach)
 library(doParallel)
+library(doFuture)
 library(dplyr)
+library(Rcpp)
+library(RcppArmadillo)
+# install.packages('RcppDist')
+sourceCpp('rotavirus_normq.cpp')
 source("choose_n_fits.R")
+source("eval_logLik_pomp.R")
 
 RUN_LEVEL = 1
 NP_MIF       = switch(RUN_LEVEL, 5000, 50000)
 NMIF         = switch(RUN_LEVEL, 4,    100)
-ncores       = switch(RUN_LEVEL, 4,    36)
+ncores       = switch(RUN_LEVEL, 2,    36)
 top_n_fits   = switch(RUN_LEVEL, 1,    12)
+sim_rep      = switch(RUN_LEVEL, 1,    100) # Total number of simulations
+
+#population number
+pop <- 82372825
 @
 
 
 % OvOv model is here
 
-<<OvOv-model, include=False, massage=False, warning=False>>=
+<<OvOv-model, echo=False, massage=False, warning=False, results=hide>>=
 # measurement model 
 dmeas <- Csnippet("
                   if (ISNA(cases1)) {
@@ -272,7 +282,7 @@ rproc <- Csnippet("
 # define parameters (without betas)
 params_fixed <- c(gamma=1, delta1=1/(5*52),delta2=1/(55*52), alpha=1/(78.86912*52), 
                   mu=0, N=82372825, omega=1/(1*52))
-# WWR's rinit
+# full-estimate-rinit
 rinit <- Csnippet("
     double m = N/(S10+I10+R10+S20+I20+R20+S30+I30+R30);
     I1=nearbyint(m*I10);
@@ -361,18 +371,20 @@ pomp(data = dat,
      params = wwr_mle
 ) -> sir
 
-sir_panel <- panelPomp::panelPomp(list(unit1=sir),
-                                  shared=NULL,
-                                  specific=wwr_mle |> 
-                                    as.matrix() |>
-                                    `colnames<-`("unit1")
-)
+
+# 
+# sir_panel <- panelPomp::panelPomp(list(unit1=sir),
+#                                   shared=NULL,
+#                                   specific=wwr_mle |> 
+#                                     as.matrix() |>
+#                                     `colnames<-`("unit1")
+# )
 @
 
 
 % Maximization Round 1
 
-<<maximization1, include=False, massage=False, warning=False>>=
+<<maximization1, echo=False, massage=False, warning=False, results=hide>>=
 set.seed(123)
 sir_box <- rbind(
   beta1=c(10,15),
@@ -396,21 +408,15 @@ sir_box <- rbind(
 
 ## Make it panelPomp
 c(apply(sir_box,1,function(x)runif(1,min=x[1],max=x[2])),
-  params_fixed) |> 
-  as.matrix() |>
-  `colnames<-`("unit1") -> starting
+  params_fixed) -> starting
 
 
-require(doParallel)
-registerDoParallel(ncores)
-mcopts <- list(set.seed=TRUE)
-
-
-bake(file = "output/round_01/ovov_mif_01.rds",{ 
-  mifs_global_01 <- foreach(i=1:ncores,.packages='pomp', .options.multicore=mcopts) %dopar% {
-    set.seed(112*i)
-    panelPomp::mif2(
-      sir_panel,
+bake(file = paste0("output/round_01/RUN_LEVEL_",RUN_LEVEL,"/ovov_mif_01.rds"),{ 
+  registerDoFuture()
+  plan(multicore, workers=ncores)
+  mifs_global_01 <- foreach(i=1:ncores,.options.future=list(seed=652643293)) %dofuture% {
+    pomp::mif2(
+      sir,
       Np = NP_MIF,
       cooling.fraction.50 = 0.5,
       rw.sd = rw_sd(beta1=0.01,beta2=0.01,beta3=0.01,
@@ -420,17 +426,15 @@ bake(file = "output/round_01/ovov_mif_01.rds",{
                     S30=ivp(0.24),I30=ivp(0.24),R30=ivp(0.24)),
       cooling.type = "geometric",
       Nmif = NMIF,
-      shared.start = numeric(0),
-      specific.start = starting,
+      params = starting,
       block = F
     ) 
   }
   mifs_global_01
 })
 
-bake(file = "output/round_01/ovov_01_el.rds",{
-  set.seed(33124)
-  el_01 <- measlespkg::eval_logLik(mifs_global_01, ncores=ncores, np_pf = NP_MIF, nreps=ncores)
+bake(file = paste0("output/round_01/RUN_LEVEL_",RUN_LEVEL,"/ovov_el_01.rds"),{
+  el_01 <- eval_logLik_pomp(mifs_global_01, ncores, NP_MIF, 4248930)
   el_01
 })
 @
@@ -438,94 +442,87 @@ bake(file = "output/round_01/ovov_01_el.rds",{
 
 % Continue: Maximization Round 2
 
-<<maximization2, include=False, massage=False, warning=False>>=
+<<maximization2, echo=False, massage=False, warning=False, results=hide>>=
 set.seed(1234)
 sd_02           = 2/3
 
-el_01 <- readRDS("output/round_01/ovov_01_el.rds")
+el_01 <- readRDS(paste0("output/round_01/RUN_LEVEL_",RUN_LEVEL,"/ovov_el_01.rds"))
 starting_values_02 <- choose_n_fits(el_01, top_n_fits, ncores)
 
 
-require(doParallel)
-registerDoParallel(ncores)
-mcopts <- list(set.seed=TRUE)
-
-bake(file = "output/round_02/ovov_mif_02.rds",{ 
-  mifs_global_02 <- foreach(i=1:ncores,.packages='pomp', .options.multicore=mcopts) %dopar% {
-    set.seed(202407222+1234*i)
-    panelPomp::mif2(
-      sir_panel,
+bake(file = paste0("output/round_02/RUN_LEVEL_",RUN_LEVEL,"/ovov_mif_02.rds"),{ 
+  registerDoFuture()
+  plan(multicore, workers=ncores)
+  mifs_global_02 <- foreach(i=1:ncores,.options.future=list(seed=652643293)) %dofuture% {
+    pomp::mif2(
+      sir,
       Np = NP_MIF,
       cooling.fraction.50 = 0.5,
       rw.sd = rw_sd(beta1=0.01*sd_02,beta2=0.01*sd_02,beta3=0.01*sd_02,
-                    beta11=0.01*sd_02,phi=0.01*sd_02,sigma_q=0.01*sd_02,sigma_xi=0.01*sd_02,
+                    beta11=0.01*sd_02,phi=0.01*sd_02,
+                    sigma_q=0.01*sd_02,sigma_xi=0.01*sd_02,
                     S10=ivp(0.24)*sd_02,I10=ivp(0.24)*sd_02,R10=ivp(0.24)*sd_02,
                     S20=ivp(0.24)*sd_02,I20=ivp(0.24)*sd_02,R20=ivp(0.24)*sd_02,
                     S30=ivp(0.24)*sd_02,I30=ivp(0.24)*sd_02,R30=ivp(0.24)*sd_02),
       cooling.type = "geometric",
       Nmif = NMIF,
-      shared.start = numeric(0),
-      specific.start = starting_values_02[[i]],
+      params = starting,
       block = F
     ) 
   }
   mifs_global_02
 })
 
-bake(file = "output/round_02/ovov_02_el.rds",{
-  set.seed(4321)
-  el_02 <- measlespkg::eval_logLik(mifs_global_02, ncores = ncores, np_pf = NP_MIF, nreps=ncores)
+bake(file = paste0("output/round_02/RUN_LEVEL_",RUN_LEVEL,"/ovov_el_02.rds"),{
+  el_02 <- eval_logLik_pomp(mifs_global_02, ncores, NP_MIF, seed=4248930)
   el_02
 })
 @
 
 % Continue: Maximization Round 3
 
-<<maximization3, include=False, massage=False, warning=False>>=
+<<maximization3, echo=False, massage=False, warning=False, results=hide>>=
 set.seed(12345)
 sd_03           = (2/3)^2
 
-el_02 <- readRDS("output/round_02/ovov_02_el.rds")
+el_02 <- readRDS(paste0("output/round_02/RUN_LEVEL_",RUN_LEVEL,"/ovov_el_02.rds"))
 starting_values_03 <- choose_n_fits(el_02, top_n_fits, ncores)
 
 
-require(doParallel)
-registerDoParallel(ncores)
-mcopts <- list(set.seed=TRUE)
-
-bake(file = "output/round_03/ovov_mif_03.rds",{ 
-  mifs_global_03 <- foreach(i=1:ncores,.packages='pomp', .options.multicore=mcopts) %dopar% {
-    set.seed(2207+4321*i)
-    panelPomp::mif2(
-      sir_panel,
+bake(file = paste0("output/round_03/RUN_LEVEL_",RUN_LEVEL,"/ovov_mif_03.rds"),{ 
+  registerDoFuture()
+  plan(multicore, workers=ncores)
+  mifs_global_03 <- foreach(i=1:ncores,.options.future=list(seed=652643293)) %dofuture% {
+    pomp::mif2(
+      sir,
       Np = NP_MIF,
       cooling.fraction.50 = 0.5,
       rw.sd = rw_sd(beta1=0.01*sd_03,beta2=0.01*sd_03,beta3=0.01*sd_03,
-                    beta11=0.01*sd_03,phi=0.01*sd_03,sigma_q=0.01*sd_03,sigma_xi=0.01*sd_03,
+                    beta11=0.01*sd_03,phi=0.01*sd_03,
+                    sigma_q=0.01*sd_03,sigma_xi=0.01*sd_03,
                     S10=ivp(0.24)*sd_03,I10=ivp(0.24)*sd_03,R10=ivp(0.24)*sd_03,
                     S20=ivp(0.24)*sd_03,I20=ivp(0.24)*sd_03,R20=ivp(0.24)*sd_03,
                     S30=ivp(0.24)*sd_03,I30=ivp(0.24)*sd_03,R30=ivp(0.24)*sd_03),
       cooling.type = "geometric",
       Nmif = NMIF,
-      shared.start = numeric(0),
-      specific.start = starting_values_03[[i]],
+      params = starting,
       block = F
     ) 
   }
   mifs_global_03
 })
 
-bake(file = "output/round_03/ovov_03_el.rds",{
-  set.seed(1234)
-  el_03 <- measlespkg::eval_logLik(mifs_global_03, ncores = ncores, np_pf = NP_MIF, nreps=ncores)
+bake(file = paste0("output/round_03/RUN_LEVEL_",RUN_LEVEL,"/ovov_el_03.rds"),{
+  el_03 <- eval_logLik_pomp(mifs_global_03, ncores, NP_MIF, seed=4248930)
   el_03
 })
 @
 
 
-<<estimated-mle, include=False, massage=False, warning=False>>=
-mif_el <- readRDS("output/round_03/ovov_03_el.rds") # Can be changed if more rounds needed
-est_mle_vec <- mif_el$fits[which.max(mif_el$fits$logLik),]
+<<estimated-mle, echo=False, massage=False, warning=False>>=
+mif_el <- readRDS(paste0("output/round_03/RUN_LEVEL_",RUN_LEVEL,"/ovov_el_03.rds")) 
+# Can be changed if more rounds needed
+est_mle_vec <- mif_el[which.max(mif_el$logLik),]
 @
 
 %%%%%%%%%% 11111111 %%%%%%%%%%%%
@@ -555,13 +552,144 @@ The large discrepancy in log-likelihood disappears at this point (see our Table~
 This re-analysis does, however, show a small advantage for PAL.
 We continued our investigation to establish the cause of this.
 
+<<pf-sim-100, echo=False, results=hide, massage=False, warning=False>>=
+# Set WWR's MLE
+wwr_mle_raw <- c(params_fixed, 
+             "beta1" = 11.48,
+             "beta2" = 0.25,
+             "beta3" = 0.35,
+             "phi" = 0.14,
+             "beta11" = 0.16,
+             "sigma_q" = 0.021,
+             "sigma_xi" = 66.89)
+
+
+i <- 1
+
+bake(file=paste0("output/pfilter/ovov_sim_100_",RUN_LEVEL,".rds"),{
+  ovov_sim_100 <- list()
+  registerDoFuture()
+  plan(multicore, workers=ncores)
+  
+  repeat {
+    # Simulation
+    sim1 <- simulate(t0 = 0,
+                     times = c(1:416),
+                     dmeasure = dmeas,
+                     rmeasure = rmeas,
+                     rprocess = discrete_time(rproc, delta.t = 1/4),
+                     statenames = c("S1", "I1", "R1", "H1", 
+                                    "S2", "I2", "R2", "H2",
+                                    "S3", "I3", "R3", "H3",
+                                    "q1", "q2", "q3"),
+                     obsnames = c("cases1", "cases2", "cases3"),
+                     paramnames = names(wwr_mle_raw),
+                     accumvars = c("H1", "H2", "H3"),
+                     rinit = rinit_wwr,
+                     params = wwr_mle_raw)
+    
+    sim_data <- as.data.frame(sim1)
+    if (!any(sim_data == 0)) {
+      ovov_sim_100[[length(ovov_sim_100) + 1]] <- sim_data[, c("cases1", "cases2", "cases3")]
+      i <- i + 1  # Increment only if the condition is satisfied
+    } else {
+      print(paste("Condition not met for iteration", i, "- retrying"))
+    }
+    
+    if (length(ovov_sim_100) >= sim_rep) break  # Exit the loop when the desired number of successful iterations is reached
+  }
+  ovov_sim_100
+})
+
+# load("ovov_sim_100.Rdata")
+@
+
+
+<<pfilter_sim_100, echo=False, massage=False, warning=False, results=hide>>=
+ovov_sim_100 <- readRDS(paste0("output/pfilter/ovov_sim_100_",RUN_LEVEL,".rds"))
+bake(file=paste0("output/pfilter/pfilter_ovov_sim_100_",RUN_LEVEL,".rds"),{
+  pfilter_ovov_sim_100 <- c()
+  registerDoFuture()
+  plan(multicore, workers=ncores)
+  
+  for(i in 1:length(ovov_sim_100)){
+    dat <- data.frame(time=c(1:416), ovov_sim_100[[i]])
+    dat |>
+      pomp(t0=0,
+           time="time",
+           rprocess=discrete_time(rproc,delta.t=1/4), ## Obs time every week, but delta.t transition is actually everyday
+           rinit=rinit_wwr,
+           dmeasure=dmeas,
+           rmeasure=rmeas,
+           accumvars=c("H1","H2","H3"),
+           statenames=c("S1","S2","S3",
+                        "I1","I2","I3",
+                        "R1","R2","R3",
+                        "H1","H2","H3",
+                        "q1","q2","q3"),
+           paramnames = names(wwr_mle_raw)
+      ) -> sir_wwr
+    
+    theta <- wwr_mle_raw
+    
+    foreach(i=1:ncores, .combine=c,
+            .options.future=list(seed=998468235L)
+    ) %dofuture% {
+      pfilter(sir_wwr,Np=NP_MIF,save.states=T, params=theta)
+    } -> pfs
+    
+    pfilter_ovov_sim_100[i] <-logmeanexp(logLik(pfs))  
+  }
+  pfilter_ovov_sim_100
+})
+@
+
+<<palfilter_sim_100, echo=False, massage=False, warning=False, results=hide>>=
+readRDS(paste0("output/pfilter/ovov_sim_100_",RUN_LEVEL,".rds"))
+prop <- 420
+
+init_dist <- c(3876549, 30351, 1315221, 57139612, 871, 302852, 19573727, 2550, 131092)
+# initial_guess <- c(runif(1,5,20),runif(1,0.05,0.5),runif(1,0.2,1),runif(1,0.05,0.4),runif(1,0.05,0.4),runif(1,0.05,0.2),runif(1,10,100))
+initial_guess <- c(11.48,0.25,0.35,0.14,0.16,0.021,66.89)
+
+### Just a filter
+Sys.time()
+
+bake(file=paste0("output/pfilter/palfilter_ovov_100_",RUN_LEVEL,".Rdata"),{
+  y <- c()
+  registerDoFuture()
+  plan(multicore, workers=ncores)
+  for(i in 1:length(ovov_sim_100)){
+    realdat <- ovov_sim_100[[i]] |> as.matrix()
+    lik_list <- rotavirus_SMC_qropxi(init_dist,realdat , 9, 
+                                     c(initial_guess[1],initial_guess[2],initial_guess[3],
+                                       initial_guess[4],initial_guess[5]), 
+                                     gamma_par = c(initial_guess[7],  1/initial_guess[7]), 
+                                     norm_par = c(0.07,initial_guess[6]), 
+                                     t(prop), NP_MIF,1)
+    y[i] <- lik_list$log_lik
+  }
+  y
+})
+
+Sys.time()
+
+# lik_list$ll_storage |> sum()
+
+# x <- c()
+# for(i in 1:10){
+#   x[i] <- any(ovov_sim_100[[i]]==0)
+# }
+@
+       
+
 \begin{figure}[h]
 \centering
 \includegraphics[width=0.55\textwidth]{thesis-figs/PAL_vs_SMC_ovov_100.png}
 \caption{\label{fig:PAL_vs_SMC_ovov_100}Log-likelihoods computed using two filtering methods for 100 randomly simulated datasets at the MLE of the OvOv model.
 The particle filter and PAL used 50,000 particles.
 The red line is the line $Lik(pfilter)=Lik(palfilter)$.
-On average, the particle filter likelihood is 7.7 log units higher than the PAL.
+On average, the particle filter likelihood is $7.7$ log units higher than the PAL.
 %%  -6224.245 - (-6231.97) = 7.725
 }
 \end{figure}
@@ -603,26 +731,26 @@ If we instead estimate the initial values, we obtain the results in Table~\ref{t
       \toprule
       Parameter      & EqEq  & EqOv  & OvOv  & OvOv (\textbf{pomp})$^*$ \\
       \midrule
-      \(\beta_1\)    & 12.15 & 12.74 & 11.48 & $\Sexpr{est_mle_vec["beta1[unit1]"]}$\\
-      \(\beta_2\)    & 0.22  & 0.21  & 0.25  & $\Sexpr{est_mle_vec["beta2[unit1]"]}$\\
-      \(\beta_3\)    & 0.34  & 0.31  & 0.35  & $\Sexpr{est_mle_vec["beta3[unit1]"]}$\\
-      \(\phi\)       & 0.017 & 0.14  & 0.14  & $\Sexpr{est_mle_vec["phi[unit1]"]}$\\
-      \(\rho\)       & 0.022 & 0.19  & 0.16  & $\Sexpr{est_mle_vec["rho[unit1]"]}$\\
-      \(\sigma^2_q\) & n/a   & 0.042 & 0.021 & $\Sexpr{est_mle_vec["sigma_q[unit1]"]}$\\
-      \(\sigma_\xi\) & n/a   & n/a   & 66.89 & $\Sexpr{est_mle_vec["sigma_xi[unit1]"]}$\\
+      \(\beta_1\)    & 12.15 & 12.74 & 11.48 & $\Sexpr{round(est_mle_vec["beta1"],2)}$\\
+      \(\beta_2\)    & 0.22  & 0.21  & 0.25  & $\Sexpr{round(est_mle_vec["beta2"],2)}$\\
+      \(\beta_3\)    & 0.34  & 0.31  & 0.35  & $\Sexpr{round(est_mle_vec["beta3"],2)}$\\
+      \(\phi\)       & 0.017 & 0.14  & 0.14  & $\Sexpr{round(est_mle_vec["phi"],2)}$\\
+      \(\rho\)       & 0.022 & 0.19  & 0.16  & $\Sexpr{round(est_mle_vec["beta11"],2)}$\\
+      \(\sigma^2_q\) & n/a   & 0.042 & 0.021 & $\Sexpr{round(est_mle_vec["sigma_q"],2)}$\\
+      \(\sigma_\xi\) & n/a   & n/a   & 66.89 & $\Sexpr{round(est_mle_vec["sigma_xi"],2)}$\\
       \addlinespace
-      \multicolumn{1}{l}{\(S_{10}\)} & \multicolumn{3}{c}{$3876549^*$} & $$\Sexpr{est_mle_vec["S10[unit1]"]}$$\\
-      \multicolumn{1}{l}{\(I_{10}\)} & \multicolumn{3}{c}{$30351$}     & $$\Sexpr{est_mle_vec["I10[unit1]"]}$$\\
-      \multicolumn{1}{l}{\(R_{10}\)} & \multicolumn{3}{c}{$1315221$}   & $$\Sexpr{est_mle_vec["R10[unit1]"]}$$\\
-      \multicolumn{1}{l}{\(S_{20}\)} & \multicolumn{3}{c}{$57139612$}  & $$\Sexpr{est_mle_vec["S20[unit1]"]}$$\\
-      \multicolumn{1}{l}{\(I_{20}\)} & \multicolumn{3}{c}{$871$}       & $$\Sexpr{est_mle_vec["I20[unit1]"]}$$\\
-      \multicolumn{1}{l}{\(R_{20}\)} & \multicolumn{3}{c}{$302852$}    & $$\Sexpr{est_mle_vec["R20[unit1]"]}$$\\
-      \multicolumn{1}{l}{\(S_{30}\)} & \multicolumn{3}{c}{$19573727$}  & $$\Sexpr{est_mle_vec["S30[unit1]"]}$$\\
-      \multicolumn{1}{l}{\(I_{30}\)} & \multicolumn{3}{c}{$2550$}      & $$\Sexpr{est_mle_vec["I30[unit1]"]}$$\\
-      \multicolumn{1}{l}{\(R_{30}\)} & \multicolumn{3}{c}{$131092$}    & $$\Sexpr{est_mle_vec["R30[unit1]"]}$$\\
+      \multicolumn{1}{l}{\(S_{10}\)} & \multicolumn{3}{c}{$3876549^*$} & $\Sexpr{round(pop*est_mle_vec["S10"],0)}$\\
+      \multicolumn{1}{l}{\(I_{10}\)} & \multicolumn{3}{c}{$30351$}     & $\Sexpr{round(pop*est_mle_vec["I10"],0)}$\\
+      \multicolumn{1}{l}{\(R_{10}\)} & \multicolumn{3}{c}{$1315221$}   & $\Sexpr{round(pop*est_mle_vec["R10"],0)}$\\
+      \multicolumn{1}{l}{\(S_{20}\)} & \multicolumn{3}{c}{$57139612$}  & $\Sexpr{round(pop*est_mle_vec["S20"],0)}$\\
+      \multicolumn{1}{l}{\(I_{20}\)} & \multicolumn{3}{c}{$871$}       & $\Sexpr{round(pop*est_mle_vec["I20"],0)}$\\
+      \multicolumn{1}{l}{\(R_{20}\)} & \multicolumn{3}{c}{$302852$}    & $\Sexpr{round(pop*est_mle_vec["R20"],0)}$\\
+      \multicolumn{1}{l}{\(S_{30}\)} & \multicolumn{3}{c}{$19573727$}  & $\Sexpr{round(pop*est_mle_vec["S30"],0)}$\\
+      \multicolumn{1}{l}{\(I_{30}\)} & \multicolumn{3}{c}{$2550$}      & $\Sexpr{round(pop*est_mle_vec["I30"],0)}$\\
+      \multicolumn{1}{l}{\(R_{30}\)} & \multicolumn{3}{c}{$131092$}    & $\Sexpr{round(pop*est_mle_vec["R30"],0)}$\\
       \midrule
       \addlinespace
-      \textbf{AIC}  & $98866.65$ & $15154.75$ & $13778.08$ & $\Sexpr{(-2)*((length(wwr_mle) - length(params_fixed)) - est_mle_vec["logLik"])}$\\
+      \textbf{AIC}  & $98866.65$ & $15154.75$ & $13778.08$ & $\Sexpr{round((-2)*((length(wwr_mle) - length(params_fixed)) - est_mle_vec["logLik"]),2)}$\\
       \addlinespace
       \bottomrule
     \end{tabular}

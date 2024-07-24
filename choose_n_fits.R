@@ -2,7 +2,7 @@
 
 choose_n_fits = function(el, top_n_fits, ncores){
   ### Next-round code
-  fit_mat <- na.omit(el$fits)
+  fit_mat <- el
   score_total = fit_mat$logLik
   ranking_total = order(score_total, decreasing = TRUE)[1:top_n_fits]
   
