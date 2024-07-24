@@ -63,7 +63,7 @@
 
 
 \begin{document}
-\SweaveOpts{concordance=TRUE}
+%\SweaveOpts{concordance=TRUE}
 
 \title{The Poisson approximate likelihood compared to the particle filter}
 \author{Yize Hao, Aaron A. Abkemeier and Edward L. Ionides}
@@ -140,7 +140,7 @@ source("choose_n_fits.R")
 source("eval_logLik_pomp.R")
 
 RUN_LEVEL = 1
-NP_MIF       = switch(RUN_LEVEL, 5000, 50000)
+NP_MIF       = switch(RUN_LEVEL, 1000, 50000)
 NMIF         = switch(RUN_LEVEL, 4,    100)
 ncores       = switch(RUN_LEVEL, 2,    36)
 top_n_fits   = switch(RUN_LEVEL, 1,    12)
@@ -153,7 +153,7 @@ pop <- 82372825
 
 % OvOv model is here
 
-<<OvOv-model, echo=False, massage=False, warning=False, results=hide>>=
+<<OvOv-model, echo=FALSE, message=FALSE, warning=FALSE, results='hide'>>=
 # measurement model 
 dmeas <- Csnippet("
                   if (ISNA(cases1)) {
@@ -384,7 +384,7 @@ pomp(data = dat,
 
 % Maximization Round 1
 
-<<maximization1, echo=False, massage=False, warning=False, results=hide>>=
+<<maximization1, echo=FALSE, message=FALSE, warning=FALSE, results='hide'>>=
 set.seed(123)
 sir_box <- rbind(
   beta1=c(10,15),
@@ -426,8 +426,7 @@ bake(file = paste0("output/round_01/RUN_LEVEL_",RUN_LEVEL,"/ovov_mif_01.rds"),{
                     S30=ivp(0.24),I30=ivp(0.24),R30=ivp(0.24)),
       cooling.type = "geometric",
       Nmif = NMIF,
-      params = starting,
-      block = F
+      params = starting
     ) 
   }
   mifs_global_01
@@ -442,9 +441,9 @@ bake(file = paste0("output/round_01/RUN_LEVEL_",RUN_LEVEL,"/ovov_el_01.rds"),{
 
 % Continue: Maximization Round 2
 
-<<maximization2, echo=False, massage=False, warning=False, results=hide>>=
+<<maximization2, echo=FALSE, message=FALSE, warning=FALSE, results='hide'>>=
 set.seed(1234)
-sd_02           = 2/3
+sd_02 = 2/3
 
 el_01 <- readRDS(paste0("output/round_01/RUN_LEVEL_",RUN_LEVEL,"/ovov_el_01.rds"))
 starting_values_02 <- choose_n_fits(el_01, top_n_fits, ncores)
@@ -466,8 +465,7 @@ bake(file = paste0("output/round_02/RUN_LEVEL_",RUN_LEVEL,"/ovov_mif_02.rds"),{
                     S30=ivp(0.24)*sd_02,I30=ivp(0.24)*sd_02,R30=ivp(0.24)*sd_02),
       cooling.type = "geometric",
       Nmif = NMIF,
-      params = starting_values_02[[i]],
-      block = F
+      params = starting_values_02[[i]]
     ) 
   }
   mifs_global_02
@@ -481,7 +479,7 @@ bake(file = paste0("output/round_02/RUN_LEVEL_",RUN_LEVEL,"/ovov_el_02.rds"),{
 
 % Continue: Maximization Round 3
 
-<<maximization3, echo=False, massage=False, warning=False, results=hide>>=
+<<maximization3, echo=FALSE, message=FALSE, warning=FALSE, results='hide'>>=
 set.seed(12345)
 sd_03           = (2/3)^2
 
@@ -505,8 +503,7 @@ bake(file = paste0("output/round_03/RUN_LEVEL_",RUN_LEVEL,"/ovov_mif_03.rds"),{
                     S30=ivp(0.24)*sd_03,I30=ivp(0.24)*sd_03,R30=ivp(0.24)*sd_03),
       cooling.type = "geometric",
       Nmif = NMIF,
-      params = starting_values_03[[i]],
-      block = F
+      params = starting_values_03[[i]]
     ) 
   }
   mifs_global_03
@@ -519,7 +516,7 @@ bake(file = paste0("output/round_03/RUN_LEVEL_",RUN_LEVEL,"/ovov_el_03.rds"),{
 @
 
 
-<<estimated-mle, echo=False, massage=False, warning=False>>=
+<<estimated-mle, echo=FALSE, message=FALSE, warning=FALSE>>=
 mif_el <- readRDS(paste0("output/round_03/RUN_LEVEL_",RUN_LEVEL,"/ovov_el_03.rds")) 
 # Can be changed if more rounds needed
 est_mle_vec <- mif_el[which.max(mif_el$logLik),]
@@ -552,7 +549,7 @@ The large discrepancy in log-likelihood disappears at this point (see our Table~
 This re-analysis does, however, show a small advantage for PAL.
 We continued our investigation to establish the cause of this.
 
-<<pf-sim-100, echo=False, results=hide, massage=False, warning=False>>=
+<<pf-sim-100, echo=FALSE, results='hide', message=FALSE, warning=FALSE>>=
 # Set WWR's MLE
 wwr_mle_raw <- c(params_fixed, 
              "beta1" = 11.48,
@@ -605,7 +602,7 @@ bake(file=paste0("output/pfilter/ovov_sim_100_",RUN_LEVEL,".rds"),{
 @
 
 
-<<pfilter_sim_100, echo=False, massage=False, warning=False, results=hide>>=
+<<pfilter_sim_100, echo=FALSE, message=FALSE, warning=FALSE, results='hide'>>=
 ovov_sim_100 <- readRDS(paste0("output/pfilter/ovov_sim_100_",RUN_LEVEL,".rds"))
 bake(file=paste0("output/pfilter/pfilter_ovov_sim_100_",RUN_LEVEL,".rds"),{
   pfilter_ovov_sim_100 <- c()
@@ -644,7 +641,7 @@ bake(file=paste0("output/pfilter/pfilter_ovov_sim_100_",RUN_LEVEL,".rds"),{
 })
 @
 
-<<palfilter_sim_100, echo=False, massage=False, warning=False, results=hide>>=
+<<palfilter_sim_100, echo=FALSE, message=FALSE, warning=FALSE, results='hide'>>=
 readRDS(paste0("output/pfilter/ovov_sim_100_",RUN_LEVEL,".rds"))
 prop <- 420
 
@@ -736,7 +733,7 @@ If we instead estimate the initial values, we obtain the results in Table~\ref{t
       \(\beta_3\)    & 0.34  & 0.31  & 0.35  & $\Sexpr{round(est_mle_vec["beta3"],2)}$\\
       \(\phi\)       & 0.017 & 0.14  & 0.14  & $\Sexpr{round(est_mle_vec["phi"],2)}$\\
       \(\rho\)       & 0.022 & 0.19  & 0.16  & $\Sexpr{round(est_mle_vec["beta11"],2)}$\\
-      \(\sigma^2_q\) & n/a   & 0.042 & 0.021 & $\Sexpr{round(est_mle_vec["sigma_q"],2)}$\\
+      \(\sigma^2_q\) & n/a   & 0.042 & 0.021 & $\Sexpr{round(est_mle_vec["sigma_q"],3)}$\\
       \(\sigma_\xi\) & n/a   & n/a   & 66.89 & $\Sexpr{round(est_mle_vec["sigma_xi"],2)}$\\
       \addlinespace
       \multicolumn{1}{l}{\(S_{10}\)} & \multicolumn{3}{c}{$3876549^*$} & $\Sexpr{round(pop*est_mle_vec["S10"],0)}$\\
