@@ -9,7 +9,7 @@ eval_logLik_pomp = function(model_obj_list, nreps, np_pf, seed){
   
   for(i in seq_along(model_obj_list)){
     registerDoFuture()
-    plan(multicore, workers = ncores)
+    plan(multicore, workers = nreps)
     
     foreach::foreach(
       j = 1:nreps,
