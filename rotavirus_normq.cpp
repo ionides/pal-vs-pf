@@ -10,6 +10,9 @@
 using namespace Rcpp;
 using namespace arma;
 
+// This file is adapted from
+// https://github.com/LorenzoRimella/PAL/RealDataExperiments/rotavirus
+// Copied on November, 2023
 
 void update_K(mat& K,
               vec lambar,

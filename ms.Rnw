@@ -1,14 +1,10 @@
 \documentclass[10pt]{article}
 \usepackage{color}
-\usepackage{graphicx} % Required for inserting 
-%%\usepackage{algpseudocode} % Include the package for algorithmic environment
-\usepackage{algorithm}
+\usepackage{graphicx} % Required for inserting
 \usepackage{booktabs} % For better-quality horizontal lines
-\usepackage{algpseudocode}
 \usepackage{multirow}
 \usepackage{threeparttable} % For table notes
 \usepackage{array} % For table formatting
-
 \usepackage{setspace}
 \usepackage{float} % add this in your preamble
 \usepackage{amsmath}
@@ -19,33 +15,20 @@
 \newcommand{\aaron}[1]{\textcolor{blue}{[AA:#1]}}
 
 \usepackage[round]{natbib}
-
 \usepackage{multirow}
-\usepackage{fourier} 
-\usepackage{booktabs}
 \usepackage{array}
 \usepackage{makecell}
 \usepackage[font={small,it}]{caption}
 \usepackage[utf8]{inputenc}
 \usepackage{mathtools}
 \usepackage{subcaption}
-\usepackage{tabstackengine}
-\usepackage[toc,page]{appendix}
 \usepackage{graphicx, fullpage, verbatim, amsmath}
 \usepackage{url, amsfonts, amssymb, amsthm,color, enumerate}
-\usepackage{placeins, listings, textcomp, mathtools, multicol, tikz}
-\usepackage{dsfont}
 \usepackage{amsfonts}
 \usepackage{bm}
 
-
-
-\TABstackMath
-
 \doublespacing
-% Language setting
-% Replace `english' with e.g. `spanish' to change the document language
-\usepackage[english]{babel}
+% \usepackage[english]{babel}
 
 % Set page size and margins
 % Replace `letterpaper' with `a4paper' for UK/EU standard size
@@ -63,7 +46,6 @@
 
 
 \begin{document}
-%\SweaveOpts{concordance=TRUE}
 
 \title{The Poisson approximate likelihood compared to the particle filter}
 \author{Yize Hao, Aaron A. Abkemeier and Edward L. Ionides}
@@ -92,10 +74,10 @@ rm(list = ls())     # clear objects
 library("knitr")
 opts_knit$set(concordance=TRUE)
 opts_chunk$set(
-    concordance = TRUE,
+#    concordance = TRUE,
     tidy = TRUE,
-    message = FALSE,
-    warning = FALSE,
+#    message = FALSE,
+#    warning = FALSE,
     tidy.opts = list(
         keep.blank.line = FALSE
     ),
@@ -155,7 +137,7 @@ out_dir <- paste0("output_0",RUN_LEVEL, "/")
 
 % OvOv model is here
 
-<<OvOv-model, echo=FALSE, message=FALSE, warning=FALSE, results='hide'>>=
+<<OvOv-model>>=
 # measurement model 
 dmeas <- Csnippet("
                   if (ISNA(cases1)) {
@@ -385,7 +367,7 @@ pomp(data = dat,
 
 % Maximization Round 1
 
-<<maximization1, echo=FALSE, message=FALSE, warning=FALSE, results='hide'>>=
+<<maximization1>>=
 set.seed(123)
 sir_box <- list(
   beta1=c(10,15),
@@ -453,7 +435,7 @@ bake(file = paste0(out_dir, "round_01/ovov_el_01.rds"),{
 
 % Continue: Maximization Round 2
 
-<<maximization2, echo=FALSE, message=FALSE, warning=FALSE, results='hide'>>=
+<<maximization2>>=
 set.seed(1234)
 sd_02 = 2/3
 
@@ -491,7 +473,7 @@ bake(file = paste0(out_dir, "round_02/ovov_el_02.rds"),{
 
 % Continue: Maximization Round 3
 
-<<maximization3, echo=FALSE, message=FALSE, warning=FALSE, results='hide'>>=
+<<maximization3>>=
 set.seed(12345)
 sd_03           = (2/3)^2
 
@@ -528,7 +510,7 @@ bake(file = paste0(out_dir,"round_03/ovov_el_03.rds"),{
 @
 
 
-<<estimated-mle, echo=FALSE, message=FALSE, warning=FALSE>>=
+<<estimated-mle>>=
 mif_el <- readRDS(paste0(out_dir,"round_03/ovov_el_03.rds")) 
 # Can be changed if more rounds needed
 est_mle_vec <- mif_el[which.max(mif_el$logLik),]
@@ -561,7 +543,7 @@ The large discrepancy in log-likelihood disappears at this point (see our Table~
 This re-analysis does, however, show a small advantage for PAL.
 We continued our investigation to establish the cause of this.
 
-<<pf-sim-100, echo=FALSE, results='hide', message=FALSE, warning=FALSE>>=
+<<pf-sim-100>>=
 # Set WWR's MLE
 wwr_mle_raw <- c(params_fixed, 
              "beta1" = 11.48,
@@ -614,7 +596,7 @@ bake(file=paste0(out_dir, "pfilter/ovov_sim_100.rds"),{
 @
 
 
-<<pfilter_sim_100, echo=FALSE, message=FALSE, warning=FALSE, results='hide'>>=
+<<pfilter_sim_100>>=
 ovov_sim_100 <- readRDS(paste0(out_dir, "pfilter/ovov_sim_100.rds"))
 bake(file=paste0(out_dir, "pfilter/pfilter_ovov_sim_100.rds"),{
   pfilter_ovov_sim_100 <- c()
@@ -653,7 +635,7 @@ bake(file=paste0(out_dir, "pfilter/pfilter_ovov_sim_100.rds"),{
 })
 @
 
-<<palfilter_sim_100, echo=FALSE, message=FALSE, warning=FALSE, results='hide'>>=
+<<palfilter_sim_100>>=
 ovov_sim_100 <- readRDS(paste0(out_dir, "pfilter/ovov_sim_100.rds"))
 prop <- 420
 
