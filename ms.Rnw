@@ -3,9 +3,7 @@
 \usepackage{graphicx} % Required for inserting 
 %%\usepackage{algpseudocode} % Include the package for algorithmic environment
 \usepackage{algorithm}
-\usepackage{booktabs} % For better-quality horizontal lines
 \usepackage{algpseudocode}
-\usepackage{multirow}
 \usepackage{threeparttable} % For table notes
 \usepackage{array} % For table formatting
 
@@ -34,8 +32,6 @@
 \usepackage{graphicx, fullpage, verbatim, amsmath}
 \usepackage{url, amsfonts, amssymb, amsthm,color, enumerate}
 \usepackage{placeins, listings, textcomp, mathtools, multicol, tikz}
-\usepackage{dsfont}
-\usepackage{amsfonts}
 \usepackage{bm}
 
 
@@ -55,7 +51,6 @@
 \usepackage{graphicx}
 \bibliographystyle{apalike}
 \usepackage[colorlinks=true,citecolor=blue]{hyperref}
-\newcommand\choleraDeath{\delta_{C}}
 
 % Using \doublespacing in the preamble 
 % changes the text to double-line spacing
@@ -340,6 +335,15 @@ wwr_mle <- c(params_fixed,
              "R20" = 3.676601e-03,
              "R30" = 1.591447e-03)
 
+wwr_mle_raw <- c(params_fixed, 
+             "beta1" = 11.48,
+             "beta2" = 0.25,
+             "beta3" = 0.35,
+             "phi" = 0.14,
+             "beta11" = 0.16,
+             "sigma_q" = 0.021,
+             "sigma_xi" = 66.89)
+
 
 pt <- pomp::parameter_trans(
   log = c("beta1","beta2","beta3","sigma_q","sigma_xi"),
@@ -423,7 +427,7 @@ design_matrix <- runif_design(lower = sapply(sir_box, `[`, 1),
 #   params_fixed) -> starting
 
 
-bake(file = paste0(out_dir, "round_01/ovov_mif_01.rds"),{ 
+bake(file = paste0(out_dir, "mif2_maximization/round_01/ovov_mif_01.rds"),{ 
   registerDoFuture()
   plan(multicore, workers=ncores)
   mifs_global_01 <- foreach(i=1:ncores,.options.future=list(seed=652643293)) %dofuture% {
@@ -444,7 +448,7 @@ bake(file = paste0(out_dir, "round_01/ovov_mif_01.rds"),{
   mifs_global_01
 })
 
-bake(file = paste0(out_dir, "round_01/ovov_el_01.rds"),{
+bake(file = paste0(out_dir, "mif2_maximization/round_01/ovov_el_01.rds"),{
   el_01 <- eval_logLik_pomp(mifs_global_01, ncores, NP_MIF, 4248930)
   el_01
 })
@@ -457,11 +461,11 @@ bake(file = paste0(out_dir, "round_01/ovov_el_01.rds"),{
 set.seed(1234)
 sd_02 = 2/3
 
-el_01 <- readRDS(paste0(out_dir,"round_01/ovov_el_01.rds"))
+el_01 <- readRDS(paste0(out_dir,"mif2_maximization/round_01/ovov_el_01.rds"))
 starting_values_02 <- choose_n_fits(el_01, top_n_fits, ncores)
 
 
-bake(file = paste0(out_dir,"round_02/ovov_mif_02.rds"),{ 
+bake(file = paste0(out_dir,"mif2_maximization/round_02/ovov_mif_02.rds"),{ 
   registerDoFuture()
   plan(multicore, workers=ncores)
   mifs_global_02 <- foreach(i=1:ncores,.options.future=list(seed=652643293)) %dofuture% {
@@ -483,7 +487,7 @@ bake(file = paste0(out_dir,"round_02/ovov_mif_02.rds"),{
   mifs_global_02
 })
 
-bake(file = paste0(out_dir, "round_02/ovov_el_02.rds"),{
+bake(file = paste0(out_dir, "mif2_maximization/round_02/ovov_el_02.rds"),{
   el_02 <- eval_logLik_pomp(mifs_global_02, ncores, NP_MIF, seed=4248930)
   el_02
 })
@@ -495,11 +499,11 @@ bake(file = paste0(out_dir, "round_02/ovov_el_02.rds"),{
 set.seed(12345)
 sd_03           = (2/3)^2
 
-el_02 <- readRDS(paste0(out_dir, "round_02/ovov_el_02.rds"))
+el_02 <- readRDS(paste0(out_dir, "mif2_maximization/round_02/ovov_el_02.rds"))
 starting_values_03 <- choose_n_fits(el_02, top_n_fits, ncores)
 
 
-bake(file = paste0(out_dir, "round_03/ovov_mif_03.rds"),{ 
+bake(file = paste0(out_dir, "mif2_maximization/round_03/ovov_mif_03.rds"),{ 
   registerDoFuture()
   plan(multicore, workers=ncores)
   mifs_global_03 <- foreach(i=1:ncores,.options.future=list(seed=652643293)) %dofuture% {
@@ -521,7 +525,7 @@ bake(file = paste0(out_dir, "round_03/ovov_mif_03.rds"),{
   mifs_global_03
 })
 
-bake(file = paste0(out_dir,"round_03/ovov_el_03.rds"),{
+bake(file = paste0(out_dir,"mif2_maximization/round_03/ovov_el_03.rds"),{
   el_03 <- eval_logLik_pomp(mifs_global_03, ncores, NP_MIF, seed=4248930)
   el_03
 })
@@ -529,7 +533,7 @@ bake(file = paste0(out_dir,"round_03/ovov_el_03.rds"),{
 
 
 <<estimated-mle, echo=FALSE, message=FALSE, warning=FALSE>>=
-mif_el <- readRDS(paste0(out_dir,"round_03/ovov_el_03.rds")) 
+mif_el <- readRDS(paste0(out_dir,"mif2_maximization/round_03/ovov_el_03.rds")) 
 # Can be changed if more rounds needed
 est_mle_vec <- mif_el[which.max(mif_el$logLik),]
 @
@@ -575,7 +579,7 @@ wwr_mle_raw <- c(params_fixed,
 
 i <- 1
 
-bake(file=paste0(out_dir, "pfilter/ovov_sim_100.rds"),{
+bake(file=paste0(out_dir, "pfilter/simulated_dataset/ovov_sim_100.rds"),{
   ovov_sim_100 <- list()
   registerDoFuture()
   plan(multicore, workers=ncores)
@@ -615,8 +619,8 @@ bake(file=paste0(out_dir, "pfilter/ovov_sim_100.rds"),{
 
 
 <<pfilter_sim_100, echo=FALSE, message=FALSE, warning=FALSE, results='hide'>>=
-ovov_sim_100 <- readRDS(paste0(out_dir, "pfilter/ovov_sim_100.rds"))
-bake(file=paste0(out_dir, "pfilter/pfilter_ovov_sim_100.rds"),{
+ovov_sim_100 <- readRDS(paste0(out_dir, "pfilter/simulated_dataset/ovov_sim_100.rds"))
+bake(file=paste0(out_dir, "pfilter/simulated_dataset/pfilter_ovov_sim_100.rds"),{
   pfilter_ovov_sim_100 <- c()
   registerDoFuture()
   plan(multicore, workers=ncores)
@@ -654,7 +658,7 @@ bake(file=paste0(out_dir, "pfilter/pfilter_ovov_sim_100.rds"),{
 @
 
 <<palfilter_sim_100, echo=FALSE, message=FALSE, warning=FALSE, results='hide'>>=
-ovov_sim_100 <- readRDS(paste0(out_dir, "pfilter/ovov_sim_100.rds"))
+ovov_sim_100 <- readRDS(paste0(out_dir, "pfilter/simulated_dataset/ovov_sim_100.rds"))
 prop <- 420
 
 init_dist <- c(3876549, 30351, 1315221, 57139612, 871, 302852, 19573727, 2550, 131092)
@@ -664,8 +668,8 @@ initial_guess <- c(11.48,0.25,0.35,0.14,0.16,0.021,66.89)
 ### Just a filter
 Sys.time()
 
-bake(file=paste0(out_dir, "pfilter/palfilter_ovov_100.rds"),{
-  y <- c()
+bake(file=paste0(out_dir, "pfilter/simulated_dataset/palfilter_ovov_100.rds"),{
+  pal_log_lik <- c()
   registerDoFuture()
   plan(multicore, workers=ncores)
   for(i in 1:length(ovov_sim_100)){
@@ -676,9 +680,9 @@ bake(file=paste0(out_dir, "pfilter/palfilter_ovov_100.rds"),{
                                      gamma_par = c(initial_guess[7],  1/initial_guess[7]), 
                                      norm_par = c(0.07,initial_guess[6]), 
                                      t(prop), NP_MIF,1)
-    y[i] <- lik_list$log_lik
+    pal_log_lik[i] <- lik_list$log_lik
   }
-  y
+  pal_log_lik
 })
 
 Sys.time()
@@ -690,7 +694,106 @@ Sys.time()
 #   x[i] <- any(ovov_sim_100[[i]]==0)
 # }
 @
+
+
+<<pfilter_org, echo=FALSE, message=FALSE, warning=FALSE>>=
+dat[-1, ] |>
+  pomp(t0=0,
+       time="time",
+       rprocess=discrete_time(rproc,delta.t=1/4), 
+       rinit=rinit_wwr,
+       dmeasure=dmeas,
+       rmeasure=rmeas,
+       accumvars=c("H1","H2","H3"),
+       statenames=c("S1","S2","S3",
+                    "I1","I2","I3",
+                    "R1","R2","R3",
+                    "H1","H2","H3",
+                    "q1","q2","q3"),
+       paramnames = names(wwr_mle_raw)
+  ) -> m1
+
+bake(file=paste0(out_dir,"pfilter/original_dataset/pfilter_org.rds"),{
+  registerDoFuture()
+  plan(multicore, workers = ncores)
+  foreach(i=1:ncores, .combine=c,
+          .options.future=list(seed=998468235L)
+  ) %dofuture% {
+    pfilter(m1,Np=NP_MIF,params=wwr_mle_raw)
+  } -> pfs
+  pfs
+})
+
+bake(file=paste0(out_dir,"pfilter/original_dataset/pfilter_list_cond_lik.rds"),{
+  list_cond_lik <- list()
+  registerDoFuture()
+  plan(multicore, workers = ncores)
+  for(k in 1:ncores){
+    list_cond_lik[[k]] <- pfs[[k]]@cond.logLik
+  }
+  list_cond_lik
+})
+@
+
+<<palfilter_org, echo=FALSE>>=
+load("real_rotavirus_metadata.Rdata")
+prop <- 420
+
+init_dist <- c(3876549, 30351, 1315221, 57139612, 871, 302852, 19573727, 2550, 131092)
+# initial_guess <- c(runif(1,5,20),runif(1,0.05,0.5),runif(1,0.2,1),runif(1,0.05,0.4),runif(1,0.05,0.4),runif(1,0.05,0.2),runif(1,10,100))
+initial_guess <- c(11.48,0.25,0.35,0.14,0.16,0.021,66.89)
+
+### palfiter
+registerDoFuture()
+plan(multicore, workers=ncores)
+
+Sys.time()
+bake(file=paste0(out_dir,"pfilter/original_dataset/palfilter_org.rds"),{
+  pal_lik_list_org <- rotavirus_SMC_qropxi(init_dist,realdat , 9, 
+                                   c(initial_guess[1],initial_guess[2],
+                                     initial_guess[3],initial_guess[4],initial_guess[5]), 
+                                   gamma_par = c(initial_guess[7],  1/initial_guess[7]), 
+                                   norm_par = c(0.07,initial_guess[6]), 
+                                   t(prop), NP_MIF,1)
+  pal_lik_list_org
+})
+Sys.time()
+@
        
+
+<<plot1, echo=FALSE, fig.height=4, fig.width=5.5>>=
+# Create your data
+time <- 1:416
+ncores <- length(list_cond_lik)
+
+# Combine the data into a single dataframe for SMC
+data_list <- lapply(1:ncores, function(i) {
+  data.frame(time = time, cond_loglik = list_cond_lik[[i]], method = "SMC")
+})
+
+# Combine all the SMC data frames into one
+df_smc <- bind_rows(data_list)
+
+# Create the PAL data frame
+df_pal <- data.frame(time = time, cond_loglik = pal_lik_list_org$ll_storage, method = "PAL")
+
+# Combine both data frames
+df <- bind_rows(df_smc, df_pal)
+
+# Plot with ggplot
+ggplot(df, aes(x = time, y = cond_loglik, group = interaction(method, factor(1:ncores)), color = method)) +
+  geom_line(data = filter(df, method == "SMC"), color = "blue") +
+  geom_line(data = filter(df, method == "PAL"), color = "red") +
+  theme_minimal() +
+  labs(title = "Conditional Log Likelihood Over Time",
+       x = "Time",
+       y = "Conditional Log Likelihood",
+       color = "Method") +
+  theme(legend.position = "bottomright")
+
+@
+
+\includegraphics[width=4.5in]{plot1}
 
 \begin{figure}[h]
 \centering
@@ -717,6 +820,23 @@ We tested this on simulated data, for which the model of \cite{wwr} is correctly
 We found that, in this case, the particle filter out-performs PAL (Figure~\ref{fig:PAL_vs_SMC_ovov_100}).
 This supports hypothesis 2, above.
 Consequently, we looked for model misspecification by comparing the conditional log-likelihood estimates at each time point, as described in the Methods section.
+
+
+
+
+
+\begin{table}[ht] % The placement specifier can be [h!tbp]
+\centering % Centers the table
+\caption{log-likelihood at the MLE of OvOv model for the real rotavirus data, computed using two filtering methods, employed 36 replicates and 50,000 particles} % This is effectively the table title
+\label{tab:ovovrealdata} % For referencing this table elsewhere in your text
+\begin{tabular}{|c c c|} 
+ \hline
+  & PAL & SMC  \\
+  \hline
+ OvOv & \Sexpr{pal_lik_list_org$log_lik} & $\Sexpr{logmeanexp(sapply(pfs, logLik))}$ \\ 
+ \hline
+\end{tabular}
+\end{table}
 
 \begin{figure}[H]
 \centering
@@ -799,18 +919,7 @@ An extended description of our reanalysis of \cite{wwr} is provided by \cite{hao
 That thesis also contains some additional results reinforcing the conclusions presented in this article.
 
 
-\begin{table}[ht] % The placement specifier can be [h!tbp]
-\centering % Centers the table
-\caption{log-likelihood at the MLE of OvOv model for the real rotavirus data, computed using two filtering methods, employed 36 replicates and 50,000 particles} % This is effectively the table title
-\label{tab:ovovrealdata} % For referencing this table elsewhere in your text
-\begin{tabular}{|c c c|} 
- \hline
-  & PAL & SMC  \\
-  \hline
- OvOv & -6892.168 & -7200.866 \\ 
- \hline
-\end{tabular}
-\end{table}
+
 
 
 \bibliography{bib-pal}
