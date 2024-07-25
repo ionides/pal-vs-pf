@@ -140,7 +140,7 @@ source("choose_n_fits.R")
 source("eval_logLik_pomp.R")
 
 RUN_LEVEL = 1
-NP_MIF       = switch(RUN_LEVEL, 1000, 50000)
+NP_MIF       = switch(RUN_LEVEL, 10, 50000)
 NMIF         = switch(RUN_LEVEL, 4,    100)
 ncores       = switch(RUN_LEVEL, 2,    36)
 top_n_fits   = switch(RUN_LEVEL, 1,    12)
@@ -148,6 +148,8 @@ sim_rep      = switch(RUN_LEVEL, 1,    100) # Total number of simulations
 
 #population number
 pop <- 82372825
+
+out_dir <- paste0("output_0",RUN_LEVEL, "/")
 @
 
 
@@ -171,7 +173,6 @@ rmeas <-  Csnippet("
                     cases2 = rbinom(H2, q2);
                     cases3 = rbinom(H3, q3);
                   ")
-
 
 
 rproc <- Csnippet("
@@ -386,7 +387,7 @@ pomp(data = dat,
 
 <<maximization1, echo=FALSE, message=FALSE, warning=FALSE, results='hide'>>=
 set.seed(123)
-sir_box <- rbind(
+sir_box <- list(
   beta1=c(10,15),
   beta2=c(0.2,0.4),
   beta3=c(0.3,0.5),
@@ -402,16 +403,27 @@ sir_box <- rbind(
   R20 = c(0.001,0.005),
   S30 = c(0.01,0.5),
   I30 = c(0.000001, 0.0001),
-  R30 = c(0.0001,0.005)
+  R30 = c(0.0001,0.005),
+  #fixed params
+  gamma = c(1,1),
+  delta1=c(1/(5*52),1/(5*52)),
+  delta2=c(1/(55*52),1/(55*52)),
+  alpha=c(1/(78.86912*52),1/(78.86912*52)),
+  mu=c(0,0),
+  N=c(82372825,82372825),
+  omega=c(1/(1*52),1/(1*52))
 )
 
 
-## Make it panelPomp
-c(apply(sir_box,1,function(x)runif(1,min=x[1],max=x[2])),
-  params_fixed) -> starting
+design_matrix <- runif_design(lower = sapply(sir_box, `[`, 1),
+                              upper = sapply(sir_box, `[`, 2),
+                              n = ncores)
+
+# c(apply(sir_box,1,function(x)runif(1,min=x[1],max=x[2])),
+#   params_fixed) -> starting
 
 
-bake(file = paste0("output/round_01/RUN_LEVEL_",RUN_LEVEL,"/ovov_mif_01.rds"),{ 
+bake(file = paste0(out_dir, "round_01/ovov_mif_01.rds"),{ 
   registerDoFuture()
   plan(multicore, workers=ncores)
   mifs_global_01 <- foreach(i=1:ncores,.options.future=list(seed=652643293)) %dofuture% {
@@ -426,13 +438,13 @@ bake(file = paste0("output/round_01/RUN_LEVEL_",RUN_LEVEL,"/ovov_mif_01.rds"),{
                     S30=ivp(0.24),I30=ivp(0.24),R30=ivp(0.24)),
       cooling.type = "geometric",
       Nmif = NMIF,
-      params = starting
+      params = design_matrix[i, ]
     ) 
   }
   mifs_global_01
 })
 
-bake(file = paste0("output/round_01/RUN_LEVEL_",RUN_LEVEL,"/ovov_el_01.rds"),{
+bake(file = paste0(out_dir, "round_01/ovov_el_01.rds"),{
   el_01 <- eval_logLik_pomp(mifs_global_01, ncores, NP_MIF, 4248930)
   el_01
 })
@@ -445,11 +457,11 @@ bake(file = paste0("output/round_01/RUN_LEVEL_",RUN_LEVEL,"/ovov_el_01.rds"),{
 set.seed(1234)
 sd_02 = 2/3
 
-el_01 <- readRDS(paste0("output/round_01/RUN_LEVEL_",RUN_LEVEL,"/ovov_el_01.rds"))
+el_01 <- readRDS(paste0(out_dir,"round_01/ovov_el_01.rds"))
 starting_values_02 <- choose_n_fits(el_01, top_n_fits, ncores)
 
 
-bake(file = paste0("output/round_02/RUN_LEVEL_",RUN_LEVEL,"/ovov_mif_02.rds"),{ 
+bake(file = paste0(out_dir,"round_02/ovov_mif_02.rds"),{ 
   registerDoFuture()
   plan(multicore, workers=ncores)
   mifs_global_02 <- foreach(i=1:ncores,.options.future=list(seed=652643293)) %dofuture% {
@@ -471,7 +483,7 @@ bake(file = paste0("output/round_02/RUN_LEVEL_",RUN_LEVEL,"/ovov_mif_02.rds"),{
   mifs_global_02
 })
 
-bake(file = paste0("output/round_02/RUN_LEVEL_",RUN_LEVEL,"/ovov_el_02.rds"),{
+bake(file = paste0(out_dir, "round_02/ovov_el_02.rds"),{
   el_02 <- eval_logLik_pomp(mifs_global_02, ncores, NP_MIF, seed=4248930)
   el_02
 })
@@ -483,11 +495,11 @@ bake(file = paste0("output/round_02/RUN_LEVEL_",RUN_LEVEL,"/ovov_el_02.rds"),{
 set.seed(12345)
 sd_03           = (2/3)^2
 
-el_02 <- readRDS(paste0("output/round_02/RUN_LEVEL_",RUN_LEVEL,"/ovov_el_02.rds"))
+el_02 <- readRDS(paste0(out_dir, "round_02/ovov_el_02.rds"))
 starting_values_03 <- choose_n_fits(el_02, top_n_fits, ncores)
 
 
-bake(file = paste0("output/round_03/RUN_LEVEL_",RUN_LEVEL,"/ovov_mif_03.rds"),{ 
+bake(file = paste0(out_dir, "round_03/ovov_mif_03.rds"),{ 
   registerDoFuture()
   plan(multicore, workers=ncores)
   mifs_global_03 <- foreach(i=1:ncores,.options.future=list(seed=652643293)) %dofuture% {
@@ -509,7 +521,7 @@ bake(file = paste0("output/round_03/RUN_LEVEL_",RUN_LEVEL,"/ovov_mif_03.rds"),{
   mifs_global_03
 })
 
-bake(file = paste0("output/round_03/RUN_LEVEL_",RUN_LEVEL,"/ovov_el_03.rds"),{
+bake(file = paste0(out_dir,"round_03/ovov_el_03.rds"),{
   el_03 <- eval_logLik_pomp(mifs_global_03, ncores, NP_MIF, seed=4248930)
   el_03
 })
@@ -517,7 +529,7 @@ bake(file = paste0("output/round_03/RUN_LEVEL_",RUN_LEVEL,"/ovov_el_03.rds"),{
 
 
 <<estimated-mle, echo=FALSE, message=FALSE, warning=FALSE>>=
-mif_el <- readRDS(paste0("output/round_03/RUN_LEVEL_",RUN_LEVEL,"/ovov_el_03.rds")) 
+mif_el <- readRDS(paste0(out_dir,"round_03/ovov_el_03.rds")) 
 # Can be changed if more rounds needed
 est_mle_vec <- mif_el[which.max(mif_el$logLik),]
 @
@@ -563,7 +575,7 @@ wwr_mle_raw <- c(params_fixed,
 
 i <- 1
 
-bake(file=paste0("output/pfilter/ovov_sim_100_",RUN_LEVEL,".rds"),{
+bake(file=paste0(out_dir, "pfilter/ovov_sim_100.rds"),{
   ovov_sim_100 <- list()
   registerDoFuture()
   plan(multicore, workers=ncores)
@@ -603,8 +615,8 @@ bake(file=paste0("output/pfilter/ovov_sim_100_",RUN_LEVEL,".rds"),{
 
 
 <<pfilter_sim_100, echo=FALSE, message=FALSE, warning=FALSE, results='hide'>>=
-ovov_sim_100 <- readRDS(paste0("output/pfilter/ovov_sim_100_",RUN_LEVEL,".rds"))
-bake(file=paste0("output/pfilter/pfilter_ovov_sim_100_",RUN_LEVEL,".rds"),{
+ovov_sim_100 <- readRDS(paste0(out_dir, "pfilter/ovov_sim_100.rds"))
+bake(file=paste0(out_dir, "pfilter/pfilter_ovov_sim_100.rds"),{
   pfilter_ovov_sim_100 <- c()
   registerDoFuture()
   plan(multicore, workers=ncores)
@@ -642,7 +654,7 @@ bake(file=paste0("output/pfilter/pfilter_ovov_sim_100_",RUN_LEVEL,".rds"),{
 @
 
 <<palfilter_sim_100, echo=FALSE, message=FALSE, warning=FALSE, results='hide'>>=
-readRDS(paste0("output/pfilter/ovov_sim_100_",RUN_LEVEL,".rds"))
+ovov_sim_100 <- readRDS(paste0(out_dir, "pfilter/ovov_sim_100.rds"))
 prop <- 420
 
 init_dist <- c(3876549, 30351, 1315221, 57139612, 871, 302852, 19573727, 2550, 131092)
@@ -652,7 +664,7 @@ initial_guess <- c(11.48,0.25,0.35,0.14,0.16,0.021,66.89)
 ### Just a filter
 Sys.time()
 
-bake(file=paste0("output/pfilter/palfilter_ovov_100_",RUN_LEVEL,".Rdata"),{
+bake(file=paste0(out_dir, "pfilter/palfilter_ovov_100.rds"),{
   y <- c()
   registerDoFuture()
   plan(multicore, workers=ncores)
