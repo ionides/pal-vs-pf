@@ -53,12 +53,12 @@
 
 \begin{abstract}
 Filtering algorithms are fundamental for inference on partially observed stochastic dynamic systems, since they provide access to the likelihood function and hence enable likelihood-based or Bayesian inference.
-Recently, a novel Poisson approximate likelihood (PAL) filter was introduced by \cite{wwr}.
+A novel Poisson approximate likelihood (PAL) filter was introduced by \cite{wwr}.
 PAL employs a Poisson approximation to conditional densities, offering a fast and consistent approximation to the likelihood function for a certain subset of partially observed Markov process models.
 \cite{wwr} supported the importance of their contribution by theoretical analysis and numerical results.
 A central piece of evidence for PAL is the comparison in Table~1 of \cite{wwr}, which claims a large improvement for PAL over a standard particle filter algorithm.
-This evidence, based on a model and data from a previous scientific study, suggests at face value that researchers confronted with similar models would be irresponsible not to adopt PAL.
-We show that the evidence is flawed because the PAL calculations were carried out using a dataset differently scaled from the previous study.
+This evidence, based on a model and data from a previous scientific study, suggests at face value that researchers confronted with similar models should use PAL rather than previous particle filter methods.
+We show that the evidence is flawed because the PAL calculations were carried out using a dataset scaled differently from the previous study.
 If PAL and the particle filter are used on this new scale, the superficial advantage of PAL largely disappears.
 On simulations where the model is correctly specified, the particle filter outperforms PAL.
 If a poorly fitting specification of initial value parameters is ammended, the particle filter also outperforms PAL on the actual data.
@@ -73,7 +73,6 @@ rm(list = ls())     # clear objects
 library("knitr")
 opts_knit$set(concordance=TRUE)
 opts_chunk$set(
-#    concordance = TRUE,
     tidy = TRUE,
 #    message = FALSE,
 #    warning = FALSE,
@@ -361,15 +360,6 @@ pomp(data = dat,
      partrans = pt,
      params = wwr_mle
 ) -> sir
-
-
-# 
-# sir_panel <- panelPomp::panelPomp(list(unit1=sir),
-#                                   shared=NULL,
-#                                   specific=wwr_mle |> 
-#                                     as.matrix() |>
-#                                     `colnames<-`("unit1")
-# )
 @
 
 
@@ -746,6 +736,7 @@ plan(multicore, workers=ncores)
 
 Sys.time()
 bake(file=paste0(out_dir,"pfilter/original_dataset/palfilter_org.rds"),{
+  realdat <- ovov_sim_100[[i]] |> as.matrix()
   pal_lik_list_org <- rotavirus_SMC_qropxi(init_dist,realdat , 9, 
                                    c(initial_guess[1],initial_guess[2],
                                      initial_guess[3],initial_guess[4],initial_guess[5]), 
