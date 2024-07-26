@@ -653,8 +653,8 @@ initial_guess <- c(11.48,0.25,0.35,0.14,0.16,0.021,66.89)
 ### Just a filter
 Sys.time()
 
-bake(file=paste0(out_dir, "pfilter/simulated_dataset/palfilter_ovov_100.rds"),{
-  pal_log_lik <- c()
+bake(file=paste0(out_dir, "pfilter/simulated_dataset/palfilter_ovov_sim_100.rds"),{
+  palfilter_ovov_sim_100 <- c()
   registerDoFuture()
   plan(multicore, workers=ncores)
   for(i in 1:length(ovov_sim_100)){
@@ -665,9 +665,9 @@ bake(file=paste0(out_dir, "pfilter/simulated_dataset/palfilter_ovov_100.rds"),{
                                      gamma_par = c(initial_guess[7],  1/initial_guess[7]), 
                                      norm_par = c(0.07,initial_guess[6]), 
                                      t(prop), NP_MIF,1)
-    pal_log_lik[i] <- lik_list$log_lik
+    palfilter_ovov_sim_100[i] <- lik_list$log_lik
   }
-  pal_log_lik
+  palfilter_ovov_sim_100
 })
 
 Sys.time()
@@ -678,6 +678,18 @@ Sys.time()
 # for(i in 1:10){
 #   x[i] <- any(ovov_sim_100[[i]]==0)
 # }
+@
+
+<<plot1,echo=FALSE, fig.height=4, fig.width=5.5, fig.cap='Log-likelihoods computed using two filtering methods for 100 randomly simulated datasets at the MLE of the OvOv model.The particle filter and PAL used 50,000 particles.The red line is the line $Lik(pfilter)=Lik(palfilter)$.On average, the particle filter likelihood is $7.7$ log units higher than the PAL. {This may not be wrong, since the likelihood evaluated by pfilter is not fully optimized by employing many particles.}'>>=
+data <- data.frame(pfilter = pfilter_ovov_sim_100, palfilter = palfilter_ovov_sim_100)
+
+ggplot(data, aes(x = pfilter, y = palfilter)) +
+  geom_point(shape = 20, size = 0.3) +  # pch=20, cex=0.3 equivalent
+  geom_abline(intercept = 0, slope = 1, color = "red") +
+  labs(title = "PAL vs SMC: OvOv with 100 simulations",
+       x = "pfilter",
+       y = "palfilter") +
+  theme_minimal()
 @
 
 
@@ -746,7 +758,7 @@ Sys.time()
 @
        
 
-<<plot1, echo=FALSE, fig.height=4, fig.width=5.5, fig.cap='Conditional log-likelihoods computed using two methods for the real rotavirus dataset, with the SMC method replicated 36 times due to its high variances. The blue line represents overlapping results from 36 SMC computations, while the red line is derived from PAL. The main sources of likelihood shortfall of SMC are at time points $t=1, 2, 3, 11, 81, 194$, and $325-333$.'>>=
+<<plot2, echo=FALSE, fig.height=4, fig.width=5.5, fig.cap='Conditional log-likelihoods computed using two methods for the real rotavirus dataset, with the SMC method replicated 36 times due to its high variances. The blue line represents overlapping results from 36 SMC computations, while the red line is derived from PAL. The main sources of likelihood shortfall of SMC are at time points $t=1, 2, 3, 11, 81, 194$, and $325-333$.'>>=
 # Create your data
 time <- 1:416
 ncores <- length(list_cond_lik)
@@ -777,7 +789,6 @@ ggplot(df, aes(x = time, y = cond_loglik, group = interaction(method, factor(1:n
   theme(legend.position = "bottom")
 @
 
-\includegraphics[width=4.5in]{plot1}
 
 \begin{figure}[h]
 \centering
