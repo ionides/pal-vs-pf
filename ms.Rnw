@@ -136,7 +136,7 @@ out_dir <- paste0("output_0",RUN_LEVEL, "/")
 
 % OvOv model is here
 
-<<OvOv-model>>=
+<<OvOv-model, echo=F, warning=F, message=F>>=
 # measurement model 
 dmeas <- Csnippet("
                   if (ISNA(cases1)) {
@@ -375,7 +375,7 @@ pomp(data = dat,
 
 % Maximization Round 1
 
-<<maximization1>>=
+<<maximization1, echo=F, warning=F, message=F>>=
 set.seed(123)
 sir_box <- list(
   beta1=c(10,15),
@@ -443,7 +443,7 @@ bake(file = paste0(out_dir, "mif2_maximization/round_01/ovov_el_01.rds"),{
 
 % Continue: Maximization Round 2
 
-<<maximization2>>=
+<<maximization2, echo=F, warning=F, message=F>>=
 set.seed(1234)
 sd_02 = 2/3
 
@@ -481,7 +481,7 @@ bake(file = paste0(out_dir, "mif2_maximization/round_02/ovov_el_02.rds"),{
 
 % Continue: Maximization Round 3
 
-<<maximization3>>=
+<<maximization3, echo=F, warning=F, message=F>>=
 set.seed(12345)
 sd_03           = (2/3)^2
 
@@ -551,7 +551,7 @@ The large discrepancy in log-likelihood disappears at this point (see our Table~
 This re-analysis does, however, show a small advantage for PAL.
 We continued our investigation to establish the cause of this.
 
-<<pf-sim-100>>=
+<<pf-sim-100, echo=F, warning=F, message=F>>=
 # Set WWR's MLE
 wwr_mle_raw <- c(params_fixed, 
              "beta1" = 11.48,
@@ -608,16 +608,15 @@ bake(file=paste0(out_dir, "pfilter/simulated_dataset/ovov_sim_100.rds"),{
 <<pfilter_sim_100, echo=FALSE, message=FALSE, warning=FALSE, results='hide'>>=
 ovov_sim_100 <- readRDS(paste0(out_dir, "pfilter/simulated_dataset/ovov_sim_100.rds"))
 bake(file=paste0(out_dir, "pfilter/simulated_dataset/pfilter_ovov_sim_100.rds"),{
+  sir_wwr <- list()
   pfilter_ovov_sim_100 <- c()
   registerDoFuture()
   plan(multicore, workers=ncores)
   
   for(i in 1:length(ovov_sim_100)){
-    dat <- data.frame(time=c(1:416), ovov_sim_100[[i]])
-    dat |>
-      pomp(t0=0,
+  data.frame(time=c(1:416), ovov_sim_100[[i]]) |>  pomp(t0=0,
            time="time",
-           rprocess=discrete_time(rproc,delta.t=1/4), ## Obs time every week, but delta.t transition is actually everyday
+           rprocess=discrete_time(rproc,delta.t=1/4),
            rinit=rinit_wwr,
            dmeasure=dmeas,
            rmeasure=rmeas,
@@ -628,14 +627,12 @@ bake(file=paste0(out_dir, "pfilter/simulated_dataset/pfilter_ovov_sim_100.rds"),
                         "H1","H2","H3",
                         "q1","q2","q3"),
            paramnames = names(wwr_mle_raw)
-      ) -> sir_wwr
+      ) -> sir_wwr[[i]]
     
-    theta <- wwr_mle_raw
-    
-    foreach(i=1:ncores, .combine=c,
+    foreach(j=1:ncores, .combine=c,
             .options.future=list(seed=998468235L)
     ) %dofuture% {
-      pfilter(sir_wwr,Np=NP_MIF,save.states=T, params=theta)
+      pfilter(sir_wwr[[i]],Np=NP_MIF,save.states=T, params=wwr_mle_raw)
     } -> pfs
     
     pfilter_ovov_sim_100[i] <-logmeanexp(logLik(pfs))  
@@ -661,8 +658,8 @@ bake(file=paste0(out_dir, "pfilter/simulated_dataset/palfilter_ovov_100.rds"),{
   registerDoFuture()
   plan(multicore, workers=ncores)
   for(i in 1:length(ovov_sim_100)){
-    realdat <- ovov_sim_100[[i]] |> as.matrix()
-    lik_list <- rotavirus_SMC_qropxi(init_dist,realdat , 9, 
+    pal_sim_dat <- ovov_sim_100[[i]] |> as.matrix()
+    lik_list <- rotavirus_SMC_qropxi(init_dist,pal_sim_dat , 9, 
                                      c(initial_guess[1],initial_guess[2],initial_guess[3],
                                        initial_guess[4],initial_guess[5]), 
                                      gamma_par = c(initial_guess[7],  1/initial_guess[7]), 
@@ -749,7 +746,7 @@ Sys.time()
 @
        
 
-<<plot1, echo=FALSE, fig.height=4, fig.width=5.5>>=
+<<plot1, echo=FALSE, fig.height=4, fig.width=5.5, fig.cap='Conditional log-likelihoods computed using two methods for the real rotavirus dataset, with the SMC method replicated 36 times due to its high variances. The blue line represents overlapping results from 36 SMC computations, while the red line is derived from PAL. The main sources of likelihood shortfall of SMC are at time points $t=1, 2, 3, 11, 81, 194$, and $325-333$.'>>=
 # Create your data
 time <- 1:416
 ncores <- length(list_cond_lik)
@@ -770,15 +767,14 @@ df <- bind_rows(df_smc, df_pal)
 
 # Plot with ggplot
 ggplot(df, aes(x = time, y = cond_loglik, group = interaction(method, factor(1:ncores)), color = method)) +
-  geom_line(data = filter(df, method == "SMC"), color = "blue") +
-  geom_line(data = filter(df, method == "PAL"), color = "red") +
+  geom_line() +
   theme_minimal() +
   labs(title = "Conditional Log Likelihood Over Time",
        x = "Time",
        y = "Conditional Log Likelihood",
        color = "Method") +
-  theme(legend.position = "bottomright")
-
+  scale_color_manual(values = c("SMC" = "blue", "PAL" = "red")) +
+  theme(legend.position = "bottom")
 @
 
 \includegraphics[width=4.5in]{plot1}
