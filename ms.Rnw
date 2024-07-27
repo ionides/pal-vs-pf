@@ -3,46 +3,35 @@
 \usepackage{graphicx} % Required for inserting
 \usepackage{booktabs} % For better-quality horizontal lines
 \usepackage{multirow}
+\usepackage{makecell}
 \usepackage{threeparttable} % For table notes
 \usepackage{array} % For table formatting
-\usepackage{setspace}
-\usepackage{float} % add this in your preamble
-\usepackage{amsmath}
+\usepackage{subcaption}
+\usepackage{setspace} % For double-line spacing
+\usepackage{float} 
 \usepackage{tabularx}
-
-\newcommand{\ed}[1]{\textcolor{red}{[EI:#1]}}
-\newcommand{\yize}[1]{\textcolor{green}{[YH:#1]}}
-\newcommand{\aaron}[1]{\textcolor{blue}{[AA:#1]}}
-
 \usepackage[round]{natbib}
-\usepackage{multirow}
-\usepackage{array}
-\usepackage{makecell}
 \usepackage[font={small,it}]{caption}
 \usepackage[utf8]{inputenc}
 \usepackage{mathtools}
-\usepackage{subcaption}
-\usepackage{graphicx, fullpage, verbatim, amsmath}
-\usepackage{url, amsfonts, amssymb, amsthm,color, enumerate}
-\usepackage{amsfonts}
-\usepackage{bm}
-
+\usepackage{fullpage}
+\usepackage{verbatim}
+\usepackage{amsfonts,amssymb,amsthm}
+\usepackage{url}
+\usepackage[colorlinks=true,citecolor=blue]{hyperref}
+% Using \doublespacing in the preamble 
+% changes the text to double-line spacing
 \doublespacing
-% \usepackage[english]{babel}
 
 % Set page size and margins
 % Replace `letterpaper' with `a4paper' for UK/EU standard size
 \usepackage[a4paper,top=2cm,bottom=2cm,left=3cm,right=3cm,marginparwidth=1.75cm]{geometry}
 
-% Useful packages
-\usepackage{graphicx}
+\newcommand{\ed}[1]{\textcolor{red}{[EI:#1]}}
+\newcommand{\yize}[1]{\textcolor{green}{[YH:#1]}}
+\newcommand{\aaron}[1]{\textcolor{blue}{[AA:#1]}}
+
 \bibliographystyle{apalike}
-\usepackage[colorlinks=true,citecolor=blue]{hyperref}
-
-% Using \doublespacing in the preamble 
-% changes the text to double-line spacing
-\doublespacing
-
 
 \begin{document}
 
@@ -57,8 +46,9 @@ A novel Poisson approximate likelihood (PAL) filter was introduced by \cite{wwr}
 PAL employs a Poisson approximation to conditional densities, offering a fast and consistent approximation to the likelihood function for a certain subset of partially observed Markov process models.
 \cite{wwr} supported the importance of their contribution by theoretical analysis and numerical results.
 A central piece of evidence for PAL is the comparison in Table~1 of \cite{wwr}, which claims a large improvement for PAL over a standard particle filter algorithm.
-This evidence, based on a model and data from a previous scientific study, suggests at face value that researchers confronted with similar models should use PAL rather than previous particle filter methods.
-We show that the evidence is flawed because the PAL calculations were carried out using a dataset scaled differently from the previous study.
+This evidence, based on a model and data from a previous scientific study, might suggests that researchers confronted with similar models should use PAL rather than previous particle filter methods.
+Alternatively, the improvement in likelihood demonstrated over the results presented by \cite{stocks} might indicate an error in that previous work.
+We show that the comparison of log-likelihood values made by \cite{wwr} is flawed because the PAL calculations were carried out using a dataset scaled differently from the previous study.
 If PAL and the particle filter are used on this new scale, the superficial advantage of PAL largely disappears.
 On simulations where the model is correctly specified, the particle filter outperforms PAL.
 If a poorly fitting specification of initial value parameters is ammended, the particle filter also outperforms PAL on the actual data.
@@ -105,7 +95,6 @@ myround <- function(x, digits = 1) {
 
 graphics.off()      # close graphics windows
 library(pomp)
-library(magrittr)
 library(ggplot2)
 library(scales)
 library(foreach)
@@ -114,7 +103,6 @@ library(doFuture)
 library(dplyr)
 library(Rcpp)
 library(RcppArmadillo)
-# install.packages('RcppDist')
 sourceCpp('rotavirus_normq.cpp')
 source("choose_n_fits.R")
 source("eval_logLik_pomp.R")
@@ -405,7 +393,7 @@ design_matrix <- runif_design(lower = sapply(sir_box, `[`, 1),
 bake(file = paste0(out_dir, "mif2_maximization/round_01/mifs_global_01.rds"),{ 
   registerDoFuture()
   plan(multicore, workers=ncores)
-  mifs_global_01 <- foreach(i=1:ncores,.options.future=list(seed=652643293)) %dofuture% {
+  foreach(i=1:ncores,.options.future=list(seed=652643293)) %dofuture% {
     pomp::mif2(
       sir_full,
       Np = NP_MIF,
@@ -420,13 +408,13 @@ bake(file = paste0(out_dir, "mif2_maximization/round_01/mifs_global_01.rds"),{
       params = design_matrix[i, ]
     ) 
   }
-  mifs_global_01
-})
+}) -> mifs_global_01 
+
 
 bake(file = paste0(out_dir, "mif2_maximization/round_01/el_01.rds"),{
-  el_01 <- eval_logLik_pomp(mifs_global_01, ncores, NP_MIF, 4248930)
-  el_01
-})
+  eval_logLik_pomp(mifs_global_01, ncores, NP_MIF, 4248930)
+}) ->  el_01
+
 @
 
 
@@ -435,15 +423,12 @@ bake(file = paste0(out_dir, "mif2_maximization/round_01/el_01.rds"),{
 <<maximization2, echo=F, warning=F, message=F>>=
 set.seed(1234)
 sd_02 = 2/3
-
-el_01 <- readRDS(paste0(out_dir,"mif2_maximization/round_01/el_01.rds"))
 starting_values_02 <- choose_n_fits(el_01, top_n_fits, ncores)
-
 
 bake(file = paste0(out_dir,"mif2_maximization/round_02/mifs_global_02.rds"),{ 
   registerDoFuture()
   plan(multicore, workers=ncores)
-  mifs_global_02 <- foreach(i=1:ncores,.options.future=list(seed=652643293)) %dofuture% {
+  foreach(i=1:ncores,.options.future=list(seed=652643293)) %dofuture% {
     pomp::mif2(
       mifs_global_01[[1]],
       rw.sd = rw_sd(beta1=0.01*sd_02,beta2=0.01*sd_02,beta3=0.01*sd_02,
@@ -455,13 +440,12 @@ bake(file = paste0(out_dir,"mif2_maximization/round_02/mifs_global_02.rds"),{
       params = starting_values_02[[i]]
     ) 
   }
-  mifs_global_02
-})
+}) ->  mifs_global_02
+
 
 bake(file = paste0(out_dir, "mif2_maximization/round_02/el_02.rds"),{
-  el_02 <- eval_logLik_pomp(mifs_global_02, ncores, NP_MIF, seed=4248930)
-  el_02
-})
+  eval_logLik_pomp(mifs_global_02, ncores, NP_MIF, seed=4248930)
+}) ->  el_02
 @
 
 % Continue: Maximization Round 3
@@ -469,37 +453,35 @@ bake(file = paste0(out_dir, "mif2_maximization/round_02/el_02.rds"),{
 <<maximization3, echo=F, warning=F, message=F>>=
 set.seed(12345)
 sd_03 = (2/3)^2
-
-el_02 <- readRDS(paste0(out_dir, "mif2_maximization/round_02/el_02.rds"))
 starting_values_03 <- choose_n_fits(el_02, top_n_fits, ncores)
 
 bake(file = paste0(out_dir, "mif2_maximization/round_03/mifs_global_03.rds"),{ 
   registerDoFuture()
   plan(multicore, workers=ncores)
-  mifs_global_03 <- foreach(i=1:ncores,.options.future=list(seed=652643293)) %dofuture% {
+  foreach(i=1:ncores,.options.future=list(seed=652643293)) %dofuture% {
     pomp::mif2(
       mifs_global_02[[1]],
-      rw.sd = rw_sd(beta1=0.01*sd_03,beta2=0.01*sd_03,beta3=0.01*sd_03,
-                beta11=0.01*sd_03,phi=0.01*sd_03,
-                sigma_q=0.01*sd_03,sigma_xi=0.01*sd_03,
-                S10=ivp(0.24)*sd_03,I10=ivp(0.24)*sd_03,R10=ivp(0.24)*sd_03,
-                S20=ivp(0.24)*sd_03,I20=ivp(0.24)*sd_03,R20=ivp(0.24)*sd_03,
-                S30=ivp(0.24)*sd_03,I30=ivp(0.24)*sd_03,R30=ivp(0.24)*sd_03),
+      rw.sd = rw_sd(
+        beta1=0.01*sd_03,beta2=0.01*sd_03,beta3=0.01*sd_03,
+        beta11=0.01*sd_03,phi=0.01*sd_03,
+        sigma_q=0.01*sd_03,sigma_xi=0.01*sd_03,
+        S10=ivp(0.24)*sd_03,I10=ivp(0.24)*sd_03,R10=ivp(0.24)*sd_03,
+        S20=ivp(0.24)*sd_03,I20=ivp(0.24)*sd_03,R20=ivp(0.24)*sd_03,
+        S30=ivp(0.24)*sd_03,I30=ivp(0.24)*sd_03,R30=ivp(0.24)*sd_03
+      ),
       params = starting_values_03[[i]]
     ) 
   }
-  mifs_global_03
-})
+}) -> mifs_global_03
+
 
 bake(file = paste0(out_dir,"mif2_maximization/round_03/el_03.rds"),{
-  el_03 <- eval_logLik_pomp(mifs_global_03, ncores, NP_MIF, seed=4248930)
-  el_03
-})
+  eval_logLik_pomp(mifs_global_03, ncores, NP_MIF, seed=4248930)
+}) ->  el_03
 @
 
 
 <<estimated-mle, echo=FALSE, message=FALSE, warning=FALSE>>=
-el_03 <- readRDS(paste0(out_dir,"mif2_maximization/round_03/el_03.rds")) 
 # Can be changed if more rounds needed
 est_mle_vec <- el_03[which.max(el_03$logLik),]
 @
@@ -533,7 +515,7 @@ We continued our investigation to establish the cause of this.
 
 <<sim-100, echo=F, warning=F, message=F>>=
 bake(file=paste0(out_dir, "pfilter/simulated_dataset/ovov_sim_100.rds"),{
-  ovov_sim_100 <- list()
+  ovov_sim_computation <- list()
   registerDoFuture()
   plan(multicore, workers=ncores)
   
@@ -544,78 +526,77 @@ bake(file=paste0(out_dir, "pfilter/simulated_dataset/ovov_sim_100.rds"),{
       subset(select=c("time","cases1","cases2","cases3"))
     
     if (!any(sim_data == 0)) {
-      ovov_sim_100[[length(ovov_sim_100) + 1]] <- sim_data
+      ovov_sim_computation[[length(ovov_sim_computation) + 1]] <- sim_data
       i <- i + 1  
     } else {
       print(paste("Condition not met for iteration", i, "- retrying"))
     }
     
-    if (length(ovov_sim_100) >= sim_rep) break  
+    if (length(ovov_sim_computation) >= sim_rep) break  
   }
-  ovov_sim_100
-})
+  ovov_sim_computation
+}) -> ovov_sim_100
 @
 
 
 
 <<pfilter_sim_100, echo=FALSE, message=FALSE, warning=FALSE, results='hide'>>=
-ovov_sim_100 <- readRDS(paste0(out_dir, "pfilter/simulated_dataset/ovov_sim_100.rds"))
 bake(file=paste0(out_dir, "pfilter/simulated_dataset/pfilter_ovov_sim_100.rds"),{
   pfilter_obj <- list()
-  pfilter_ovov_sim_100 <- c()
+  pfilter_ovov_sim_computation <- c()
   registerDoFuture()
   plan(multicore, workers=ncores)
   
   for(i in 1:length(ovov_sim_100)){
     pomp(data = ovov_sim_100[[i]],
-    times="time",
-    t0=0,
-    dmeasure = dmeas,
-    rmeasure = rmeas,
-    rprocess = discrete_time(step.fun = rproc, delta.t = 1/4),
-    statenames = statenames,
-    paramnames = names(params_wwr),
-    accumvars= c("H1", "H2", "H3"),
-    rinit= rinit_wwr,
-    partrans = pt_wwr,
-    params = params_wwr
+      times="time",
+      t0=0,
+      dmeasure = dmeas,
+      rmeasure = rmeas,
+      rprocess = discrete_time(step.fun = rproc, delta.t = 1/4),
+      statenames = statenames,
+      paramnames = names(params_wwr),
+      accumvars= c("H1", "H2", "H3"),
+      rinit= rinit_wwr,
+      partrans = pt_wwr,
+      params = params_wwr
     )  -> pfilter_obj[[i]]
     
     foreach(j=1:ncores, .combine=c,
-            .options.future=list(seed=998468235L)
+      .options.future=list(seed=998468235L)
     ) %dofuture% {
       pfilter(pfilter_obj[[i]],Np=NP_MIF,save.states=T, params=params_wwr)
     } -> pfs
     
-    pfilter_ovov_sim_100[i] <-logmeanexp(logLik(pfs))  
+    pfilter_ovov_sim_computation[i] <- logmeanexp(logLik(pfs))  
   }
-  pfilter_ovov_sim_100
-})
+  pfilter_ovov_sim_computation
+}) ->  pfilter_ovov_sim_100
 @
 
 
 <<palfilter_sim_100, echo=FALSE, message=FALSE, warning=FALSE, results='hide'>>=
-ovov_sim_100 <- readRDS(paste0(out_dir, "pfilter/simulated_dataset/ovov_sim_100.rds"))
 prop <- 420
-
 init_dist <- c(3876549, 30351, 1315221, 57139612, 871, 302852, 19573727, 2550, 131092)
 initial_guess <- c(11.48,0.25,0.35,0.14,0.16,0.021,66.89)
 
 bake(file=paste0(out_dir, "pfilter/simulated_dataset/palfilter_ovov_sim_100.rds"),{
-  palfilter_ovov_sim_100 <- c()
+  palfilter_ovov_sim_computation <- c()
   registerDoFuture()
   plan(multicore, workers=ncores)
   for(i in 1:length(ovov_sim_100)){
     pal_sim_dat <- ovov_sim_100[[i]][,-1] |> as.matrix()
     lik_list <- rotavirus_SMC_qropxi(init_dist,pal_sim_dat , 9, 
-      c(initial_guess[1],initial_guess[2],initial_guess[3],initial_guess[4],initial_guess[5]), 
-      gamma_par = c(initial_guess[7],  1/initial_guess[7]), 
+      c(initial_guess[1],initial_guess[2],initial_guess[3],
+        initial_guess[4],initial_guess[5]), 
+        gamma_par = c(initial_guess[7],  1/initial_guess[7]
+      ), 
       norm_par = c(0.07,initial_guess[6]), 
       t(prop), NP_MIF,1)
-    palfilter_ovov_sim_100[i] <- lik_list$log_lik
+    palfilter_ovov_sim_computation[i] <- lik_list$log_lik
   }
-  palfilter_ovov_sim_100
-})
+  palfilter_ovov_sim_computation
+}) -> palfilter_ovov_sim_100
 
 # lik_list$ll_storage |> sum()
 @
@@ -641,19 +622,18 @@ bake(file=paste0(out_dir,"pfilter/original_dataset/pfilter_wwr.rds"),{
           .options.future=list(seed=998468235L)
   ) %dofuture% {
     pfilter(sir_wwr,Np=NP_MIF,params=params_wwr)
-  } -> pfilter_wwr
-  pfilter_wwr
-})
+  } 
+}) ->  pfilter_wwr
 
 bake(file=paste0(out_dir,"pfilter/original_dataset/pfilter_wwr_cond_lik.rds"),{
-  pfilter_wwr_cond_lik <- list()
+  pfilter_wwr_cond_lik_computation <- list()
   registerDoFuture()
   plan(multicore, workers = ncores)
   for(k in 1:ncores){
-    pfilter_wwr_cond_lik[[k]] <- pfilter_wwr[[k]]@cond.logLik
+    pfilter_wwr_cond_lik_computation[[k]] <- pfilter_wwr[[k]]@cond.logLik
   }
-  pfilter_wwr_cond_lik
-})
+  pfilter_wwr_cond_lik_computation
+}) -> pfilter_wwr_cond_lik
 @
 
 <<palfilter_wwr, echo=FALSE>>=
@@ -668,12 +648,14 @@ registerDoFuture()
 plan(multicore, workers=ncores)
 
 bake(file=paste0(out_dir,"pfilter/original_dataset/palfilter_lik_list_wwr.rds"),{
-  palfilter_lik_list_wwr <- rotavirus_SMC_qropxi(init_dist,realdat , 9, 
-    c(initial_guess[1],initial_guess[2],initial_guess[3],initial_guess[4],initial_guess[5]),     gamma_par = c(initial_guess[7],  1/initial_guess[7]), 
+  rotavirus_SMC_qropxi(
+    init_dist,realdat , 9, 
+    c(initial_guess[1],initial_guess[2],initial_guess[3],initial_guess[4],
+      initial_guess[5]),     gamma_par = c(initial_guess[7],  1/initial_guess[7]), 
     norm_par = c(0.07,initial_guess[6]), 
-    t(prop), NP_MIF,1)
-  palfilter_lik_list_wwr
-})
+    t(prop), NP_MIF,1
+  )
+}) -> palfilter_lik_list_wwr
 @
        
 
@@ -727,16 +709,11 @@ Possible explanations for PAL obtaining a higher log-likelihood than a particle 
 \item If the model is misspecified, the approximation error in PAL could lead to a higher log-likelihood estimate than that of the actual misspecified model.
 \end{enumerate}
 Log-likelihood is a proper scoring rule for forecasts \cite{gneiting2}, and both the particle filter and PAL construct their log-likelihood estimates via a sequence of one-step forecasts.
-%% resulting in estimates of the conditional log-likelihood, $f_{Y
 Therefore, if the model is correctly specified, the approximation error in PAL can only decrease the expected log-likelihood.
 We tested this on simulated data, for which the model of \cite{wwr} is correctly specified.
 We found that, in this case, the particle filter out-performs PAL (Figure~\ref{fig:PAL_vs_SMC_ovov_100}).
 This supports hypothesis 2, above.
 Consequently, we looked for model misspecification by comparing the conditional log-likelihood estimates at each time point, as described in the Methods section.
-
-
-
-
 
 \begin{table}[ht] % The placement specifier can be [h!tbp]
 \centering % Centers the table
@@ -830,9 +807,6 @@ The optimization method is not directly pertinent to the comparison of the filte
 
 An extended description of our reanalysis of \cite{wwr} is provided by \cite{hao24}.
 That thesis also contains some additional results reinforcing the conclusions presented in this article.
-
-
-
 
 
 \bibliography{bib-pal}
