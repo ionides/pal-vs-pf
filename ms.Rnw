@@ -358,7 +358,8 @@ sir_wwr <- pomp(
   params = params_wwr
 ) 
 
-sir_full <- pomp(sir_wwr,
+sir_full <- pomp(
+  sir_wwr,
   rinit = rinit_full,
   params = params_full,
   partrans = pt_full,
@@ -407,14 +408,14 @@ design_matrix <- runif_design(
 
 bake(file = paste0(out_dir, "mif2_maximization/round_01/mifs_global_01.rds"),{ 
   registerDoFuture()
-  plan(multicore, workers=ncores)
-  foreach(i = 1:ncores, .options.future = list(seed=652643293)) %dofuture% {
+  plan(multicore, workers = ncores)
+  foreach(i = 1:ncores, .options.future = list(seed = 652643293)) %dofuture% {
     pomp::mif2(
       sir_full,
       Np = NP_MIF,
       cooling.fraction.50 = 0.5,
       rw.sd = rw_sd(
-        beta1 = 0.01, beta2=0.01, beta3=0.01, beta11 = 0.01, 
+        beta1 = 0.01, beta2 = 0.01, beta3 = 0.01, beta11 = 0.01, 
         phi = 0.01, sigma_q = 0.01, sigma_xi = 0.01,
         S10 = ivp(0.24), I10 = ivp(0.24), R10 = ivp(0.24),
         S20 = ivp(0.24), I20 = ivp(0.24), R20 = ivp(0.24),
@@ -495,7 +496,7 @@ bake(file = paste0(out_dir, "mif2_maximization/round_03/mifs_global_03.rds"),{
 
 
 bake(file = paste0(out_dir,"mif2_maximization/round_03/el_03.rds"),{
-  eval_logLik_pomp(mifs_global_03, ncores, NP_MIF, seed=4248930)
+  eval_logLik_pomp(mifs_global_03, ncores, NP_MIF, seed = 4248930)
 }) ->  el_03
 @
 
@@ -564,10 +565,11 @@ bake(file = paste0(out_dir, "pfilter/simulated_dataset/pfilter_ovov_sim_100.rds"
   pfilter_obj <- list()
   pfilter_ovov_sim_computation <- c()
   registerDoFuture()
-  plan(multicore, workers=ncores)
+  plan(multicore, workers = ncores)
   
   for(i in 1:length(ovov_sim_100)){
-    pomp(data = ovov_sim_100[[i]],
+    pomp(
+      data = ovov_sim_100[[i]],
       times = "time",
       t0 = 0,
       dmeasure = dmeas,
@@ -585,7 +587,7 @@ bake(file = paste0(out_dir, "pfilter/simulated_dataset/pfilter_ovov_sim_100.rds"
       .options.future = list(seed = 998468235L)
     ) %dofuture% {
       pfilter(
-        pfilter_obj[[i]], Np = NP_MIF, save.states = T, params = params_wwr
+        pfilter_obj[[i]], Np = NP_MIF, save.states = TRUE, params = params_wwr
       )
     } -> pfs
     pfilter_ovov_sim_computation[i] <- logmeanexp(logLik(pfs))  
