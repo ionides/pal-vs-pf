@@ -107,12 +107,12 @@ sourceCpp('rotavirus_normq.cpp')
 source("choose_n_fits.R")
 source("eval_logLik_pomp.R")
 
-RUN_LEVEL = 1
-NP_MIF       = switch(RUN_LEVEL, 10, 50000)
-NMIF         = switch(RUN_LEVEL, 5,    100)
-ncores       = switch(RUN_LEVEL, 4,    36)
-top_n_fits   = switch(RUN_LEVEL, 1,    12)
-sim_rep      = switch(RUN_LEVEL, 5,    100) # Total number of simulations
+RUN_LEVEL = 2
+NP_MIF       = switch(RUN_LEVEL, 10,   5000,  50000)
+NMIF         = switch(RUN_LEVEL, 5,    20,    100)
+ncores       = switch(RUN_LEVEL, 4,    10,    36)
+top_n_fits   = switch(RUN_LEVEL, 1,    2,     12)
+sim_rep      = switch(RUN_LEVEL, 5,    20,    100) #sim_ovov
 
 #population number
 pop <- 82372825
