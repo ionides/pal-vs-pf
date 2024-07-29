@@ -51,7 +51,7 @@ Alternatively, the improvement in likelihood demonstrated over the results prese
 We show that the comparison of log-likelihood values made by \cite{wwr} is flawed because the PAL calculations were carried out using a dataset scaled differently from the previous study.
 If PAL and the particle filter are used on this new scale, the superficial advantage of PAL largely disappears.
 On simulations where the model is correctly specified, the particle filter outperforms PAL.
-If a poorly fitting specification of initial value parameters is ammended, the particle filter also outperforms PAL on the actual data.
+If a poorly fitting specification of initial value parameters is amended, the particle filter also outperforms PAL on the actual data.
 \end{abstract}
 
 
@@ -63,20 +63,20 @@ rm(list = ls())     # clear objects
 library("knitr")
 opts_knit$set(concordance=TRUE)
 opts_chunk$set(
-    tidy = TRUE,
-#    message = FALSE,
-#    warning = FALSE,
-    tidy.opts = list(
-        keep.blank.line = FALSE
-    ),
-    comment = "",
-    echo = FALSE,
-    results = FALSE,
-    dev.args = list(
-        bg = "transparent",
-        pointsize = 9
-    ),
-    fig.path = "figure/"
+  tidy = TRUE,
+# message = FALSE,
+# warning = FALSE,
+  tidy.opts = list(
+    keep.blank.line = FALSE
+  ),
+  comment = "",
+  echo = FALSE,
+  results = FALSE,
+  dev.args = list(
+    bg = "transparent",
+    pointsize = 9
+  ),
+  fig.path = "figure/"
 )
 
 myround <- function(x, digits = 1) {
@@ -139,33 +139,35 @@ rmeas <-  Csnippet("
 
 rproc <- Csnippet("
   int I = I1 + I2 + I3;
-  int trans_S1[3], trans_S2[3], trans_S3[2], trans_I1[3], trans_I2[3], trans_I3[2], trans_R1[3], trans_R2[3], trans_R3[2];
+  int trans_S1[3], trans_S2[3], trans_S3[2], trans_I1[3], trans_I2[3], 
+  trans_I3[2], trans_R1[3], trans_R2[3], trans_R3[2];
     
-  double prob_S1[3],prob_I1[3],prob_R1[3],prob_S2[3],prob_I2[3],prob_R2[3],prob_S3[2],prob_I3[2],prob_R3[2];
+  double prob_S1[3], prob_I1[3], prob_R1[3], prob_S2[3], prob_I2[3], prob_R2[3],
+  prob_S3[2], prob_I3[2], prob_R3[2];
     
   double xi = rgamma(sigma_xi, 1/sigma_xi);
     
   double kappa = (1 + beta11*cos(2*3.141593*t/52 + phi)) * xi;
     
   // Define rate
-  prob_S1[0] = 1-exp(-dt*beta1*kappa*I/N); // 0->1
-  prob_S1[1] = 1-exp(-delta1*dt);
+  prob_S1[0] = 1 - exp(-dt*beta1*kappa*I/N); // 0->1
+  prob_S1[1] = 1 - exp(-delta1*dt);
   prob_S1[2] = exp(-delta1*dt) + exp(-dt*beta1*kappa*I/N) - 1;
     
-  prob_I1[0] = 1-exp(-gamma*dt);
-  prob_I1[1] = 1-exp(-delta1*dt);
+  prob_I1[0] = 1 - exp(-gamma*dt);
+  prob_I1[1] = 1 - exp(-delta1*dt);
   prob_I1[2] = exp(-gamma*dt)+exp(-delta1*dt) - 1;
     
   prob_R1[0] = 1 - exp(-omega*dt);  // E_1,t this goes back to S_1,(t+1)
   prob_R1[1] = 1 - exp(-delta1*dt);
   prob_R1[2] = exp(-omega*dt) + exp(-delta1*dt) - 1;
     
-  prob_S2[0] = 1-exp(-dt*beta2*kappa*I/N);
-  prob_S2[1] = 1-exp(-delta2*dt);
+  prob_S2[0] = 1 - exp(-dt*beta2*kappa*I/N);
+  prob_S2[1] = 1 - exp(-delta2*dt);
   prob_S2[2] = exp(-delta2*dt) + exp(-dt*beta2*kappa*I/N) - 1;
     
-  prob_I2[0] = 1-exp(-dt*gamma);
-  prob_I2[1] = 1-exp(-dt*delta2);
+  prob_I2[0] = 1 - exp(-dt*gamma);
+  prob_I2[1] = 1 - exp(-dt*delta2);
   prob_I2[2] = exp(-dt*gamma)+exp(-dt*delta2) - 1;
     
   prob_R2[0] = 1 - exp(-dt*omega);  // E_1,t this goes back to S_1,(t+1)
@@ -195,7 +197,7 @@ rproc <- Csnippet("
   // F: Aging: (1)->(2)->(3)
   // E: R->S
   // D: Death
-  //// Note: Here S_1, S_2... are all old value from (t-1)
+  //// Note: Here S_1, S_2... are all old values from (t-1)
   rmultinom(S1, &prob_S1, 3, &trans_S1); // B, F, S-B-F
   rmultinom(I1, &prob_I1, 3, &trans_I1); // C, F, I-C-F
   rmultinom(R1, &prob_R1, 3, &trans_R1); // E, F, R-E-F
@@ -279,19 +281,29 @@ rinit_wwr <- Csnippet("
 # x/sum(x)
 
 # define parameters (without betas)
-params_fixed <- c(gamma=1, delta1=1/(5*52),delta2=1/(55*52), alpha=1/(78.86912*52), 
-                  mu=0, N=82372825, omega=1/(1*52))
+params_fixed <- c(
+  gamma = 1, 
+  delta1 = 1/(5*52),
+  delta2 = 1/(55*52), 
+  alpha = 1/(78.86912*52), 
+  mu = 0, 
+  N = 82372825, 
+  omega = 1/(1*52)
+)
 # Set to MLE
-params_wwr <- c(params_fixed, 
+params_wwr <- c(
+  params_fixed, 
   "beta1" = 11.48,
   "beta2" = 0.25,
   "beta3" = 0.35,
   "phi" = 0.14,
   "beta11" = 0.16,
   "sigma_q" = 0.021,
-  "sigma_xi" = 66.89)
+  "sigma_xi" = 66.89
+)
 
-params_full <- c(params_wwr,
+params_full <- c(
+  params_wwr,
   "S10" = 4.706102e-02,
   "S20" = 6.936707e-01,
   "S30" = 2.376236e-01,
@@ -300,29 +312,29 @@ params_full <- c(params_wwr,
   "I30" = 3.095681e-05,
   "R10" = 1.596669e-02,
   "R20" = 3.676601e-03,
-  "R30" = 1.591447e-03)
-
+  "R30" = 1.591447e-03
+)
 
 pt_full <- pomp::parameter_trans(
-  log = c("beta1","beta2","beta3","sigma_q","sigma_xi"),
-  logit=c("beta11"),
-  barycentric=c("S10","I10","R10",
-                "S20","I20","R20",
-                "S30","I30","R30"),
-  toEst= pomp::Csnippet("T_phi = logit(phi/(M_2PI));"),
-  fromEst= pomp::Csnippet("phi = M_2PI*expit(T_phi);")
+  log = c("beta1", "beta2", "beta3", "sigma_q", "sigma_xi"),
+  logit = c("beta11"),
+  barycentric = c("S10","I10","R10",
+                  "S20","I20","R20",
+                  "S30","I30","R30"),
+  toEst = pomp::Csnippet("T_phi = logit(phi/(M_2PI));"),
+  fromEst = pomp::Csnippet("phi = M_2PI*expit(T_phi);")
 )
 
 pt_wwr <- pomp::parameter_trans(
-  log = c("beta1","beta2","beta3","sigma_q","sigma_xi"),
-  logit=c("beta11"),
-  toEst= pomp::Csnippet("T_phi = logit(phi/(M_2PI));"),
-  fromEst= pomp::Csnippet("phi = M_2PI*expit(T_phi);")
+  log = c("beta1", "beta2", "beta3", "sigma_q", "sigma_xi"),
+  logit = c("beta11"),
+  toEst = pomp::Csnippet("T_phi = logit(phi/(M_2PI));"),
+  fromEst = pomp::Csnippet("phi = M_2PI*expit(T_phi);")
 )
 
 
-read.table("real_rotavirus_metadata.txt") %>%
-  arrange(time) -> dat
+dat <- read.table("real_rotavirus_metadata.txt") |>
+  arrange(time)
 
 statenames <- c(
   "S1", "I1", "R1", "H1",
@@ -331,16 +343,17 @@ statenames <- c(
   "q1", "q2", "q3"
 )
 
-sir_wwr <- pomp(data = dat,
-  times="time",
-  t0=0,
+sir_wwr <- pomp(
+  data = dat,
+  times = "time",
+  t0 = 0,
   dmeasure = dmeas,
   rmeasure = rmeas,
   rprocess = discrete_time(step.fun = rproc, delta.t = 1/4),
   statenames = statenames,
   paramnames = names(params_wwr),
-  accumvars= c("H1", "H2", "H3"),
-  rinit= rinit_wwr,
+  accumvars = c("H1", "H2", "H3"),
+  rinit = rinit_wwr,
   partrans = pt_wwr,
   params = params_wwr
 ) 
@@ -360,49 +373,53 @@ sir_full <- pomp(sir_wwr,
 <<maximization1, echo=F, warning=F, message=F>>=
 set.seed(123)
 sir_box <- list(
-  beta1=c(10,15),
-  beta2=c(0.2,0.4),
-  beta3=c(0.3,0.5),
-  phi=c(0.01,0.3),
-  beta11=c(0.1,0.2),
-  sigma_q=c(0.001,0.1),
-  sigma_xi=c(65,70),
-  S10 = c(0.01,0.05),
+  beta1 = c(10, 15),
+  beta2 = c(0.2, 0.4),
+  beta3 = c(0.3, 0.5),
+  phi = c(0.01, 0.3),
+  beta11 = c(0.1, 0.2),
+  sigma_q = c(0.001, 0.1),
+  sigma_xi = c(65, 70),
+  S10 = c(0.01, 0.05),
   I10 = c(0.0001, 0.0005),
   R10 = c(0.01, 0.05),
-  S20 = c(0.01,0.7),
-  I20 = c(0.000001,0.00002),
-  R20 = c(0.001,0.005),
-  S30 = c(0.01,0.5),
+  S20 = c(0.01, 0.7),
+  I20 = c(0.000001, 0.00002),
+  R20 = c(0.001, 0.005),
+  S30 = c(0.01, 0.5),
   I30 = c(0.000001, 0.0001),
-  R30 = c(0.0001,0.005),
-  gamma = c(1,1),
-  delta1=c(1/(5*52),1/(5*52)),
-  delta2=c(1/(55*52),1/(55*52)),
-  alpha=c(1/(78.86912*52),1/(78.86912*52)),
-  mu=c(0,0),
-  N=c(82372825,82372825),
-  omega=c(1/(1*52),1/(1*52))
+  R30 = c(0.0001, 0.005),
+  gamma = c(1, 1),
+  delta1 = c(1/(5*52), 1/(5*52)),
+  delta2 = c(1/(55*52), 1/(55*52)),
+  alpha = c(1/(78.86912*52), 1/(78.86912*52)),
+  mu = c(0, 0),
+  N = c(82372825, 82372825),
+  omega = c(1/(1*52), 1/(1*52))
 )
 
 
-design_matrix <- runif_design(lower = sapply(sir_box, `[`, 1),
-                              upper = sapply(sir_box, `[`, 2),
-                              n = ncores)
+design_matrix <- runif_design(
+  lower = sapply(sir_box, `[`, 1),
+  upper = sapply(sir_box, `[`, 2),
+  n = ncores
+)
 
 bake(file = paste0(out_dir, "mif2_maximization/round_01/mifs_global_01.rds"),{ 
   registerDoFuture()
   plan(multicore, workers=ncores)
-  foreach(i=1:ncores,.options.future=list(seed=652643293)) %dofuture% {
+  foreach(i = 1:ncores, .options.future = list(seed=652643293)) %dofuture% {
     pomp::mif2(
       sir_full,
       Np = NP_MIF,
       cooling.fraction.50 = 0.5,
-      rw.sd = rw_sd(beta1=0.01,beta2=0.01,beta3=0.01,
-        beta11=0.01,phi=0.01,sigma_q=0.01,sigma_xi=0.01,
-        S10=ivp(0.24),I10=ivp(0.24),R10=ivp(0.24),
-        S20=ivp(0.24),I20=ivp(0.24),R20=ivp(0.24),
-        S30=ivp(0.24),I30=ivp(0.24),R30=ivp(0.24)),
+      rw.sd = rw_sd(
+        beta1 = 0.01, beta2=0.01, beta3=0.01, beta11 = 0.01, 
+        phi = 0.01, sigma_q = 0.01, sigma_xi = 0.01,
+        S10 = ivp(0.24), I10 = ivp(0.24), R10 = ivp(0.24),
+        S20 = ivp(0.24), I20 = ivp(0.24), R20 = ivp(0.24),
+        S30 = ivp(0.24), I30 = ivp(0.24), R30 = ivp(0.24)
+      ),
       cooling.type = "geometric",
       Nmif = NMIF,
       params = design_matrix[i, ]
@@ -427,16 +444,18 @@ starting_values_02 <- choose_n_fits(el_01, top_n_fits, ncores)
 
 bake(file = paste0(out_dir,"mif2_maximization/round_02/mifs_global_02.rds"),{ 
   registerDoFuture()
-  plan(multicore, workers=ncores)
-  foreach(i=1:ncores,.options.future=list(seed=652643293)) %dofuture% {
+  plan(multicore, workers = ncores)
+  foreach(i = 1:ncores, .options.future = list(seed = 652643293)) %dofuture% {
     pomp::mif2(
       mifs_global_01[[1]],
-      rw.sd = rw_sd(beta1=0.01*sd_02,beta2=0.01*sd_02,beta3=0.01*sd_02,
-                beta11=0.01*sd_02,phi=0.01*sd_02,
-                sigma_q=0.01*sd_02,sigma_xi=0.01*sd_02,
-                S10=ivp(0.24)*sd_02,I10=ivp(0.24)*sd_02,R10=ivp(0.24)*sd_02,
-                S20=ivp(0.24)*sd_02,I20=ivp(0.24)*sd_02,R20=ivp(0.24)*sd_02,
-                S30=ivp(0.24)*sd_02,I30=ivp(0.24)*sd_02,R30=ivp(0.24)*sd_02),
+      rw.sd = rw_sd(
+        beta1 = 0.01*sd_02, beta2 = 0.01*sd_02, beta3 = 0.01*sd_02,
+        beta11 = 0.01*sd_02, phi = 0.01*sd_02,
+        sigma_q = 0.01*sd_02, sigma_xi = 0.01*sd_02,
+        S10 = ivp(0.24)*sd_02, I10 = ivp(0.24)*sd_02, R10 = ivp(0.24)*sd_02,
+        S20 = ivp(0.24)*sd_02, I20 = ivp(0.24)*sd_02, R20 = ivp(0.24)*sd_02,
+        S30 = ivp(0.24)*sd_02, I30 = ivp(0.24)*sd_02, R30 = ivp(0.24)*sd_02
+      ),
       params = starting_values_02[[i]]
     ) 
   }
@@ -457,17 +476,17 @@ starting_values_03 <- choose_n_fits(el_02, top_n_fits, ncores)
 
 bake(file = paste0(out_dir, "mif2_maximization/round_03/mifs_global_03.rds"),{ 
   registerDoFuture()
-  plan(multicore, workers=ncores)
-  foreach(i=1:ncores,.options.future=list(seed=652643293)) %dofuture% {
+  plan(multicore, workers = ncores)
+  foreach(i = 1:ncores, .options.future = list(seed = 652643293)) %dofuture% {
     pomp::mif2(
       mifs_global_02[[1]],
       rw.sd = rw_sd(
-        beta1=0.01*sd_03,beta2=0.01*sd_03,beta3=0.01*sd_03,
-        beta11=0.01*sd_03,phi=0.01*sd_03,
-        sigma_q=0.01*sd_03,sigma_xi=0.01*sd_03,
-        S10=ivp(0.24)*sd_03,I10=ivp(0.24)*sd_03,R10=ivp(0.24)*sd_03,
-        S20=ivp(0.24)*sd_03,I20=ivp(0.24)*sd_03,R20=ivp(0.24)*sd_03,
-        S30=ivp(0.24)*sd_03,I30=ivp(0.24)*sd_03,R30=ivp(0.24)*sd_03
+        beta1 = 0.01*sd_03, beta2 = 0.01*sd_03, beta3 = 0.01*sd_03,
+        beta11 = 0.01*sd_03, phi = 0.01*sd_03,
+        sigma_q = 0.01*sd_03, sigma_xi = 0.01*sd_03,
+        S10 = ivp(0.24)*sd_03, I10 = ivp(0.24)*sd_03, R10 = ivp(0.24)*sd_03,
+        S20 = ivp(0.24)*sd_03, I20 = ivp(0.24)*sd_03, R20 = ivp(0.24)*sd_03,
+        S30 = ivp(0.24)*sd_03, I30 = ivp(0.24)*sd_03, R30 = ivp(0.24)*sd_03
       ),
       params = starting_values_03[[i]]
     ) 
@@ -514,16 +533,16 @@ This re-analysis does, however, show a small advantage for PAL.
 We continued our investigation to establish the cause of this.
 
 <<sim-100, echo=F, warning=F, message=F>>=
-bake(file=paste0(out_dir, "pfilter/simulated_dataset/ovov_sim_100.rds"),{
+bake(file = paste0(out_dir, "pfilter/simulated_dataset/ovov_sim_100.rds"),{
   ovov_sim_computation <- list()
   registerDoFuture()
-  plan(multicore, workers=ncores)
+  plan(multicore, workers = ncores)
   
   i <- 1
   repeat {
     # Simulation
-    sim_data <- simulate(sir_wwr, format="data.frame") |>
-      subset(select=c("time","cases1","cases2","cases3"))
+    sim_data <- simulate(sir_wwr, format = "data.frame") |>
+      subset(select=c("time", "cases1", "cases2", "cases3"))
     
     if (!any(sim_data == 0)) {
       ovov_sim_computation[[length(ovov_sim_computation) + 1]] <- sim_data
@@ -541,7 +560,7 @@ bake(file=paste0(out_dir, "pfilter/simulated_dataset/ovov_sim_100.rds"),{
 
 
 <<pfilter_sim_100, echo=FALSE, message=FALSE, warning=FALSE, results='hide'>>=
-bake(file=paste0(out_dir, "pfilter/simulated_dataset/pfilter_ovov_sim_100.rds"),{
+bake(file = paste0(out_dir, "pfilter/simulated_dataset/pfilter_ovov_sim_100.rds"),{
   pfilter_obj <- list()
   pfilter_ovov_sim_computation <- c()
   registerDoFuture()
@@ -549,25 +568,26 @@ bake(file=paste0(out_dir, "pfilter/simulated_dataset/pfilter_ovov_sim_100.rds"),
   
   for(i in 1:length(ovov_sim_100)){
     pomp(data = ovov_sim_100[[i]],
-      times="time",
-      t0=0,
+      times = "time",
+      t0 = 0,
       dmeasure = dmeas,
       rmeasure = rmeas,
       rprocess = discrete_time(step.fun = rproc, delta.t = 1/4),
       statenames = statenames,
       paramnames = names(params_wwr),
-      accumvars= c("H1", "H2", "H3"),
-      rinit= rinit_wwr,
+      accumvars = c("H1", "H2", "H3"),
+      rinit = rinit_wwr,
       partrans = pt_wwr,
       params = params_wwr
     )  -> pfilter_obj[[i]]
     
-    foreach(j=1:ncores, .combine=c,
-      .options.future=list(seed=998468235L)
+    foreach(j = 1:ncores, .combine = c,
+      .options.future = list(seed = 998468235L)
     ) %dofuture% {
-      pfilter(pfilter_obj[[i]],Np=NP_MIF,save.states=T, params=params_wwr)
+      pfilter(
+        pfilter_obj[[i]], Np = NP_MIF, save.states = T, params = params_wwr
+      )
     } -> pfs
-    
     pfilter_ovov_sim_computation[i] <- logmeanexp(logLik(pfs))  
   }
   pfilter_ovov_sim_computation
@@ -577,22 +597,31 @@ bake(file=paste0(out_dir, "pfilter/simulated_dataset/pfilter_ovov_sim_100.rds"),
 
 <<palfilter_sim_100, echo=FALSE, message=FALSE, warning=FALSE, results='hide'>>=
 prop <- 420
-init_dist <- c(3876549, 30351, 1315221, 57139612, 871, 302852, 19573727, 2550, 131092)
-initial_guess <- c(11.48,0.25,0.35,0.14,0.16,0.021,66.89)
+init_dist <- c(
+  3876549, 30351, 1315221, 57139612, 871, 302852, 19573727, 2550, 131092
+)
+initial_guess <- c(11.48, 0.25, 0.35, 0.14, 0.16, 0.021, 66.89)
 
-bake(file=paste0(out_dir, "pfilter/simulated_dataset/palfilter_ovov_sim_100.rds"),{
+bake(file = paste0(out_dir, "pfilter/simulated_dataset/palfilter_ovov_sim_100.rds"),{
   palfilter_ovov_sim_computation <- c()
   registerDoFuture()
-  plan(multicore, workers=ncores)
+  plan(multicore, workers = ncores)
   for(i in 1:length(ovov_sim_100)){
     pal_sim_dat <- ovov_sim_100[[i]][,-1] |> as.matrix()
-    lik_list <- rotavirus_SMC_qropxi(init_dist,pal_sim_dat , 9, 
-      c(initial_guess[1],initial_guess[2],initial_guess[3],
-        initial_guess[4],initial_guess[5]), 
-        gamma_par = c(initial_guess[7],  1/initial_guess[7]
+    lik_list <- rotavirus_SMC_qropxi(
+      init_dist = init_dist, 
+      y_obs = pal_sim_dat, 
+      m = 9, 
+      regular_params = c(
+        initial_guess[1], initial_guess[2], initial_guess[3], initial_guess[4],
+        initial_guess[5]
       ), 
-      norm_par = c(0.07,initial_guess[6]), 
-      t(prop), NP_MIF,1)
+      gamma_par = c(initial_guess[7], 1/initial_guess[7]), 
+      norm_par = c(0.07, initial_guess[6]), 
+      prop = t(prop), 
+      n_particles = NP_MIF,
+      ncores = 1
+    )
     palfilter_ovov_sim_computation[i] <- lik_list$log_lik
   }
   palfilter_ovov_sim_computation
@@ -602,30 +631,35 @@ bake(file=paste0(out_dir, "pfilter/simulated_dataset/palfilter_ovov_sim_100.rds"
 @
 
 <<plot1-100-sim-compare,echo=FALSE, fig.height=4, fig.width=5.5, fig.cap='Log-likelihoods computed using two filtering methods for 100 randomly simulated datasets at the MLE of the OvOv model.The particle filter and PAL used 50,000 particles.The red line is the line $Lik(pfilter)=Lik(palfilter)$.On average, the particle filter likelihood is $7.7$ log units higher than the PAL. {This may not be wrong, since the likelihood evaluated by pfilter is not fully optimized by employing many particles.}'>>=
-data <- data.frame(pfilter = pfilter_ovov_sim_100, palfilter = palfilter_ovov_sim_100)
+data <- data.frame(
+  pfilter = pfilter_ovov_sim_100, 
+  palfilter = palfilter_ovov_sim_100
+)
 
 ggplot(data, aes(x = pfilter, y = palfilter)) +
   geom_point(shape = 20, size = 0.3) +  # pch=20, cex=0.3 equivalent
   geom_abline(intercept = 0, slope = 1, color = "red") +
-  labs(title = "PAL vs SMC: OvOv with 100 simulations",
-       x = "pfilter",
-       y = "palfilter") +
+  labs(
+    title = "PAL vs SMC: OvOv with 100 simulations",
+    x = "pfilter",
+    y = "palfilter"
+  ) +
   theme_minimal()
 @
 
 
 <<pfilter_wwr, echo=FALSE, message=FALSE, warning=FALSE>>=
-bake(file=paste0(out_dir,"pfilter/original_dataset/pfilter_wwr.rds"),{
+bake(file = paste0(out_dir, "pfilter/original_dataset/pfilter_wwr.rds"),{
   registerDoFuture()
   plan(multicore, workers = ncores)
-  foreach(i=1:ncores, .combine=c,
-          .options.future=list(seed=998468235L)
+  foreach(
+    i = 1:ncores, .combine = c, .options.future = list(seed = 998468235L)
   ) %dofuture% {
-    pfilter(sir_wwr,Np=NP_MIF,params=params_wwr)
+    pfilter(sir_wwr, Np = NP_MIF, params = params_wwr)
   } 
 }) ->  pfilter_wwr
 
-bake(file=paste0(out_dir,"pfilter/original_dataset/pfilter_wwr_cond_lik.rds"),{
+bake(file = paste0(out_dir, "pfilter/original_dataset/pfilter_wwr_cond_lik.rds"),{
   pfilter_wwr_cond_lik_computation <- list()
   registerDoFuture()
   plan(multicore, workers = ncores)
@@ -640,21 +674,30 @@ bake(file=paste0(out_dir,"pfilter/original_dataset/pfilter_wwr_cond_lik.rds"),{
 realdat <- as.matrix(dat[,-1])
 prop <- 420
 
-init_dist <- c(3876549, 30351, 1315221, 57139612, 871, 302852, 19573727, 2550, 131092)
-initial_guess <- c(11.48,0.25,0.35,0.14,0.16,0.021,66.89)
+init_dist <- c(
+  3876549, 30351, 1315221, 57139612, 871, 302852, 19573727, 2550, 131092
+)
+initial_guess <- c(11.48, 0.25, 0.35, 0.14, 0.16, 0.021, 66.89)
 
 ### palfiter
 registerDoFuture()
-plan(multicore, workers=ncores)
+plan(multicore, workers = ncores)
 
-bake(file=paste0(out_dir,"pfilter/original_dataset/palfilter_lik_list_wwr.rds"),{
+bake(file = paste0(out_dir,"pfilter/original_dataset/palfilter_lik_list_wwr.rds"),{
   rotavirus_SMC_qropxi(
-    init_dist,realdat , 9, 
-    c(initial_guess[1],initial_guess[2],initial_guess[3],initial_guess[4],
-      initial_guess[5]),     gamma_par = c(initial_guess[7],  1/initial_guess[7]), 
-    norm_par = c(0.07,initial_guess[6]), 
-    t(prop), NP_MIF,1
-  )
+    init_dist = init_dist, 
+    y_obs = realdat, 
+    m = 9, 
+    regular_params = c(
+      initial_guess[1], initial_guess[2], initial_guess[3], initial_guess[4],
+      initial_guess[5]
+    ), 
+    gamma_par = c(initial_guess[7], 1/initial_guess[7]), 
+    norm_par = c(0.07, initial_guess[6]), 
+    prop = t(prop), 
+    n_particles = NP_MIF, 
+    ncores = 1
+  ) 
 }) -> palfilter_lik_list_wwr
 @
        
@@ -665,26 +708,43 @@ time <- 1:416
 
 # Combine the data into a single dataframe for SMC
 data_list <- lapply(1:ncores, function(i) {
-  data.frame(time = time, cond_loglik = pfilter_wwr_cond_lik[[i]], method = "SMC")
+  data.frame(
+    time = time, 
+    cond_loglik = pfilter_wwr_cond_lik[[i]], 
+    method = "SMC"
+  )
 })
 
 # Combine all the SMC data frames into one
 df_smc <- bind_rows(data_list)
 
 # Create the PAL data frame
-df_pal <- data.frame(time = time, cond_loglik = palfilter_lik_list_wwr$ll_storage, method = "PAL")
+df_pal <- data.frame(
+  time = time, 
+  cond_loglik = palfilter_lik_list_wwr$ll_storage, 
+  method = "PAL"
+)
 
 # Combine both data frames
 df <- bind_rows(df_smc, df_pal)
 
 # Plot with ggplot
-ggplot(df, aes(x = time, y = cond_loglik, group = interaction(method, factor(1:ncores)), color = method)) +
+ggplot(
+  df, 
+  aes(
+    x = time, y = cond_loglik, 
+    group = interaction(method, factor(1:ncores)), 
+    color = method
+  )
+) +
   geom_line() +
   theme_minimal() +
-  labs(title = "Conditional Log Likelihood Over Time",
-       x = "Time",
-       y = "Conditional Log Likelihood",
-       color = "Method") +
+  labs(
+    title = "Conditional Log Likelihood Over Time",
+    x = "Time",
+    y = "Conditional Log Likelihood",
+    color = "Method"
+  ) +
   scale_color_manual(values = c("SMC" = "blue", "PAL" = "red")) +
   theme(legend.position = "bottom")
 @
