@@ -519,15 +519,15 @@ The theory developed by \cite{wwr} shows that PAL has some potentially useful sc
 First, we show that most of this apparent improvement for PAL arises because \cite{wwr} used a different scaling of the data from \cite{stocks}.
 %% \section{Comparing PAL with the particle filter} 
 Two models for the same data can properly be compared by their likelihood, even if the models have entirely different structures.
-One can making allowance for the number of estimated parameters using a quantity such as Akaike's information criterion [REF].
+One can make allowance for the number of estimated parameters using a quantity such as Akaike's information criterion [REF].
 However, if data are rescaled, a correction is required to make likelihoods comparable.
 If one model describes a dataset in grams, and another describes it in kilograms, then the latter model will earn an increased log-likelihood of $\log(10^3)$ for each data point simply because of the change in scale.
 Presenting a direct comparison of a likelihood for the data in grams with a likelihood for the data in kilograms would evidently be inapprpriate.
 \cite{stocks} fitted their model to a dataset derived by dividing the original reported count data by an estimated reporting rate, to put their data on the scale of the actual number of cases in the population.
 \cite{wwr} fitted directly to the report data.
 The reporting rate used by \cite{stocks} varied over time, but was generally around $7\%$.
-On 1200 data points, this corresponds to a discrepancy of around $-1200\log(0.07)=3200$ log-likelihood units, largely explaining the difference reported in Table~1 and interpreted by \cite{wwr} as evidence supporting PAL.
-The comparison can be corrected either by applying the method of \cite{stocks} to the data of \cite{wwr} or vvice versa.
+On $\approx 1200$ data points ($3*416$), this corresponds to a discrepancy of around $-1200\log(0.07)=3200$ log-likelihood units, largely explaining the difference reported in Table~1 and interpreted by \cite{wwr} as evidence supporting PAL.
+The comparison can be corrected either by applying the method of \cite{stocks} to the data of \cite{wwr} or vice versa.
 Since the method of \cite{stocks} is applicable to a more general class of models, and supported by published software, it was more convenient to apply this method to the model and data of \cite{wwr}.
 The large discrepancy in log-likelihood disappears at this point (see our Table~\ref{tab:ovovrealdata} , column \ed{XXX}).
 This re-analysis does, however, show a small advantage for PAL.
