@@ -51,7 +51,7 @@ Alternatively, the improvement in likelihood demonstrated over the results prese
 We show that the comparison of log-likelihood values made by \cite{wwr} is flawed because the PAL calculations were carried out using a dataset scaled differently from the previous study.
 If PAL and the particle filter are used on this new scale, the superficial advantage of PAL largely disappears.
 On simulations where the model is correctly specified, the particle filter outperforms PAL.
-If a poorly fitting specification of initial value parameters is amended, the particle filter also outperforms PAL on the actual data.
+If a poorly fitting specification of initial value parameters is amended, the particle filter also outperforms PAL on the actual data. Nevertheless, PAL still yields reliable results and demonstrates superiority in computational time.
 \end{abstract}
 
 
@@ -107,7 +107,7 @@ sourceCpp('rotavirus_normq.cpp')
 source("choose_n_fits.R")
 source("eval_logLik_pomp.R")
 
-RUN_LEVEL = 2
+RUN_LEVEL = 1
 NP_MIF       = switch(RUN_LEVEL, 10,   5000,  50000)
 NMIF         = switch(RUN_LEVEL, 5,    20,    100)
 ncores       = switch(RUN_LEVEL, 4,    10,    36)
@@ -116,6 +116,7 @@ sim_rep      = switch(RUN_LEVEL, 5,    20,    100) #sim_ovov
 
 #population number
 pop <- 82372825
+time <- c(1:416)
 
 out_dir <- paste0("output_0",RUN_LEVEL, "/")
 @
@@ -135,7 +136,6 @@ rmeas <-  Csnippet("
   cases2 = rbinom(H2, q2);
   cases3 = rbinom(H3, q3);
 ")
-
 
 rproc <- Csnippet("
   int I = I1 + I2 + I3;
@@ -280,7 +280,7 @@ rinit_wwr <- Csnippet("
 # x <- c(3876549,57139612,19573727,30351,871,2550,1315221,302852,131092)
 # x/sum(x)
 
-# define parameters (without betas)
+# define parameters (fixed)
 params_fixed <- c(
   gamma = 1, 
   delta1 = 1/(5*52),
@@ -398,7 +398,6 @@ sir_box <- list(
   N = c(82372825, 82372825),
   omega = c(1/(1*52), 1/(1*52))
 )
-
 
 design_matrix <- runif_design(
   lower = sapply(sir_box, `[`, 1),
@@ -519,19 +518,19 @@ The theory developed by \cite{wwr} shows that PAL has some potentially useful sc
 First, we show that most of this apparent improvement for PAL arises because \cite{wwr} used a different scaling of the data from \cite{stocks}.
 %% \section{Comparing PAL with the particle filter} 
 Two models for the same data can properly be compared by their likelihood, even if the models have entirely different structures.
-One can make allowance for the number of estimated parameters using a quantity such as Akaike's information criterion [REF].
+One can make allowance for the number of estimated parameters using a quantity such as Akaike's information criterion \citep{Akaike1974ANL}.
 However, if data are rescaled, a correction is required to make likelihoods comparable.
 If one model describes a dataset in grams, and another describes it in kilograms, then the latter model will earn an increased log-likelihood of $\log(10^3)$ for each data point simply because of the change in scale.
-Presenting a direct comparison of a likelihood for the data in grams with a likelihood for the data in kilograms would evidently be inapprpriate.
-\cite{stocks} fitted their model to a dataset derived by dividing the original reported count data by an estimated reporting rate, to put their data on the scale of the actual number of cases in the population.
-\cite{wwr} fitted directly to the report data.
+Presenting a direct comparison of a likelihood for the data in grams with a likelihood for the data in kilograms would evidently be inappropriate.
+\cite{stocks} fitted their model to a dataset derived by dividing the original reported count data by an estimated reporting rate, to put their data on the scale of the actual number of cases in the population, whereas \cite{wwr} fitted directly to the report data.
 The reporting rate used by \cite{stocks} varied over time, but was generally around $7\%$.
-On $\approx 1200$ data points ($3*416$), this corresponds to a discrepancy of around $-1200\log(0.07)=3200$ log-likelihood units, largely explaining the difference reported in Table~1 and interpreted by \cite{wwr} as evidence supporting PAL.
+On approximately 1200 data points, this corresponds to a discrepancy of around $-1200\log(0.07) \approx 3200$ log-likelihood units, largely explaining the difference reported in Table~1 and interpreted by \cite{wwr} as evidence supporting PAL.
 The comparison can be corrected either by applying the method of \cite{stocks} to the data of \cite{wwr} or vice versa.
 Since the method of \cite{stocks} is applicable to a more general class of models, and supported by published software, it was more convenient to apply this method to the model and data of \cite{wwr}.
-The large discrepancy in log-likelihood disappears at this point (see our Table~\ref{tab:ovovrealdata} , column \ed{XXX}).
-This re-analysis does, however, show a small advantage for PAL.
+The large discrepancy in log-likelihood disappears at this point by recomputing the likelihood of the model using PAL and particle filter separately (see Table~\ref{tab:ovovrealdata}).
+This re-analysis does, however, show a discrepancy between two methods.
 We continued our investigation to establish the cause of this.
+
 
 <<sim-100, echo=F, warning=F, message=F>>=
 bake(file = paste0(out_dir, "pfilter/simulated_dataset/ovov_sim_100.rds"),{
@@ -557,7 +556,6 @@ bake(file = paste0(out_dir, "pfilter/simulated_dataset/ovov_sim_100.rds"),{
   ovov_sim_computation
 }) -> ovov_sim_100
 @
-
 
 
 <<pfilter_sim_100, echo=FALSE, message=FALSE, warning=FALSE, results='hide'>>=
@@ -597,6 +595,7 @@ bake(file = paste0(out_dir, "pfilter/simulated_dataset/pfilter_ovov_sim_100.rds"
 @
 
 
+
 <<palfilter_sim_100, echo=FALSE, message=FALSE, warning=FALSE, results='hide'>>=
 prop <- 420
 init_dist <- c(
@@ -608,7 +607,9 @@ bake(file = paste0(out_dir, "pfilter/simulated_dataset/palfilter_ovov_sim_100.rd
   palfilter_ovov_sim_computation <- c()
   registerDoFuture()
   plan(multicore, workers = ncores)
-  for(i in 1:length(ovov_sim_100)){
+  foreach(
+    i = 1:length(ovov_sim_100), .combine = c, .options.future = list(seed = 998468235L)
+  ) %dofuture% {
     pal_sim_dat <- ovov_sim_100[[i]][,-1] |> as.matrix()
     lik_list <- rotavirus_SMC_qropxi(
       init_dist = init_dist, 
@@ -622,7 +623,7 @@ bake(file = paste0(out_dir, "pfilter/simulated_dataset/palfilter_ovov_sim_100.rd
       norm_par = c(0.07, initial_guess[6]), 
       prop = t(prop), 
       n_particles = NP_MIF,
-      ncores = 1
+      ncores = ncores
     )
     palfilter_ovov_sim_computation[i] <- lik_list$log_lik
   }
@@ -632,33 +633,34 @@ bake(file = paste0(out_dir, "pfilter/simulated_dataset/palfilter_ovov_sim_100.rd
 # lik_list$ll_storage |> sum()
 @
 
-<<plot1-100-sim-compare,echo=FALSE, fig.height=4, fig.width=5.5, fig.cap='Log-likelihoods computed using two filtering methods for 100 randomly simulated datasets at the MLE of the OvOv model.The particle filter and PAL used 50,000 particles.The red line is the line $Lik(pfilter)=Lik(palfilter)$.On average, the particle filter likelihood is $7.7$ log units higher than the PAL. {This may not be wrong, since the likelihood evaluated by pfilter is not fully optimized by employing many particles.}'>>=
+
+<<plot1-100-sim-compare,echo=FALSE, fig.height=4, fig.width=5.5, fig.cap='Log-likelihoods computed using two filtering methods for 100 randomly simulated datasets at the MLE of the OvOv model.The particle filter and PAL used 50,000 particles.The red line is the line $Lik(pfilter)=Lik(palfilter)$.On average, the particle filter likelihood is $7.7$ log units higher than the PAL.'>>=
 data <- data.frame(
   pfilter = pfilter_ovov_sim_100, 
   palfilter = palfilter_ovov_sim_100
 )
 
 ggplot(data, aes(x = pfilter, y = palfilter)) +
-  geom_point(shape = 20, size = 0.3) +  # pch=20, cex=0.3 equivalent
-  geom_abline(intercept = 0, slope = 1, color = "red") +
-  labs(
-    title = "PAL vs SMC: OvOv with 100 simulations",
-    x = "pfilter",
-    y = "palfilter"
-  ) +
-  theme_minimal()
+geom_point(shape = 20, size = 0.3) +  # pch=20, cex=0.3 equivalent
+geom_abline(intercept = 0, slope = 1, color = "red") +
+labs(
+title = "PAL vs SMC: OvOv with 100 simulations",
+x = "pfilter",
+y = "palfilter"
+) +
+theme_minimal()
 @
 
 
 <<pfilter_wwr, echo=FALSE, message=FALSE, warning=FALSE>>=
 bake(file = paste0(out_dir, "pfilter/original_dataset/pfilter_wwr.rds"),{
-  registerDoFuture()
-  plan(multicore, workers = ncores)
-  foreach(
-    i = 1:ncores, .combine = c, .options.future = list(seed = 998468235L)
-  ) %dofuture% {
-    pfilter(sir_wwr, Np = NP_MIF, params = params_wwr)
-  } 
+registerDoFuture()
+plan(multicore, workers = ncores)
+foreach(
+i = 1:ncores, .combine = c, .options.future = list(seed = 998468235L)
+) %dofuture% {
+pfilter(sir_wwr, Np = NP_MIF, params = params_wwr)
+} 
 }) ->  pfilter_wwr
 
 bake(file = paste0(out_dir, "pfilter/original_dataset/pfilter_wwr_cond_lik.rds"),{
@@ -674,19 +676,10 @@ bake(file = paste0(out_dir, "pfilter/original_dataset/pfilter_wwr_cond_lik.rds")
 
 <<palfilter_wwr, echo=FALSE>>=
 realdat <- as.matrix(dat[,-1])
-prop <- 420
-
-init_dist <- c(
-  3876549, 30351, 1315221, 57139612, 871, 302852, 19573727, 2550, 131092
-)
-initial_guess <- c(11.48, 0.25, 0.35, 0.14, 0.16, 0.021, 66.89)
-
-### palfiter
-registerDoFuture()
-plan(multicore, workers = ncores)
 
 bake(file = paste0(out_dir,"pfilter/original_dataset/palfilter_lik_list_wwr.rds"),{
-  rotavirus_SMC_qropxi(
+ set.seed(1223)
+ rotavirus_SMC_qropxi(
     init_dist = init_dist, 
     y_obs = realdat, 
     m = 9, 
@@ -698,22 +691,21 @@ bake(file = paste0(out_dir,"pfilter/original_dataset/palfilter_lik_list_wwr.rds"
     norm_par = c(0.07, initial_guess[6]), 
     prop = t(prop), 
     n_particles = NP_MIF, 
-    ncores = 1
+    ncores = ncores
   ) 
 }) -> palfilter_lik_list_wwr
 @
-       
+
 
 <<plot2-cond-loglik, echo=FALSE, fig.height=4, fig.width=5.5, fig.cap='Conditional log-likelihoods computed using two methods for the real rotavirus dataset, with the SMC method replicated 36 times due to its high variances. The blue line represents overlapping results from 36 SMC computations, while the red line is derived from PAL. The main sources of likelihood shortfall of SMC are at time points $t=1, 2, 3, 11, 81, 194$, and $325-333$.'>>=
-# Create your data
-time <- 1:416
 
-# Combine the data into a single dataframe for SMC
+# Combine the data into a single dataframe for SMC with grouping variable
 data_list <- lapply(1:ncores, function(i) {
   data.frame(
     time = time, 
     cond_loglik = pfilter_wwr_cond_lik[[i]], 
-    method = "SMC"
+    method = "SMC",
+    group = i
   )
 })
 
@@ -724,22 +716,17 @@ df_smc <- bind_rows(data_list)
 df_pal <- data.frame(
   time = time, 
   cond_loglik = palfilter_lik_list_wwr$ll_storage, 
-  method = "PAL"
+  method = "PAL",
+  group = 1  # Single group for PAL
 )
 
 # Combine both data frames
 df <- bind_rows(df_smc, df_pal)
 
 # Plot with ggplot
-ggplot(
-  df, 
-  aes(
-    x = time, y = cond_loglik, 
-    group = interaction(method, factor(1:ncores)), 
-    color = method
-  )
-) +
-  geom_line() +
+ggplot(df, aes(x = time, y = cond_loglik, color = method)) +
+  geom_line(data = df %>% filter(method == "SMC"), aes(group = group), color = "blue", alpha = 0.7) +
+  geom_line(data = df %>% filter(method == "PAL"), aes(group = group), color = "red") +
   theme_minimal() +
   labs(
     title = "Conditional Log Likelihood Over Time",
@@ -747,21 +734,21 @@ ggplot(
     y = "Conditional Log Likelihood",
     color = "Method"
   ) +
-  scale_color_manual(values = c("SMC" = "blue", "PAL" = "red")) +
   theme(legend.position = "bottom")
 @
 
 
-\begin{figure}[h]
-\centering
-\includegraphics[width=0.55\textwidth]{thesis-figs/PAL_vs_SMC_ovov_100.png}
-\caption{\label{fig:PAL_vs_SMC_ovov_100}Log-likelihoods computed using two filtering methods for 100 randomly simulated datasets at the MLE of the OvOv model.
-The particle filter and PAL used 50,000 particles.
-The red line is the line $Lik(pfilter)=Lik(palfilter)$.
-On average, the particle filter likelihood is $7.7$ log units higher than the PAL.
-%%  -6224.245 - (-6231.97) = 7.725
-}
-\end{figure}
+
+% \begin{figure}[h]
+% \centering
+% \includegraphics[width=0.55\textwidth]{thesis-figs/PAL_vs_SMC_ovov_100.png}
+% \caption{\label{fig:PAL_vs_SMC_ovov_100}Log-likelihoods computed using two filtering methods for 100 randomly simulated datasets at the MLE of the OvOv model.
+% The particle filter and PAL used 50,000 particles.
+% The red line is the line $Lik(pfilter)=Lik(palfilter)$.
+% On average, the particle filter likelihood is $7.7$ log units higher than the PAL.
+% %%  -6224.245 - (-6231.97) = 7.725
+% }
+% \end{figure}
 
 
 PAL provides an approximate filter, whereas the particle filter provides a Monte~Carlo estimate of an exact filter.
@@ -773,7 +760,7 @@ Possible explanations for PAL obtaining a higher log-likelihood than a particle 
 Log-likelihood is a proper scoring rule for forecasts \cite{gneiting2}, and both the particle filter and PAL construct their log-likelihood estimates via a sequence of one-step forecasts.
 Therefore, if the model is correctly specified, the approximation error in PAL can only decrease the expected log-likelihood.
 We tested this on simulated data, for which the model of \cite{wwr} is correctly specified.
-We found that, in this case, the particle filter out-performs PAL (Figure~\ref{fig:PAL_vs_SMC_ovov_100}).
+We found that, in this case, the particle filter out-performs PAL (Figure~1).
 This supports hypothesis 2, above.
 Consequently, we looked for model misspecification by comparing the conditional log-likelihood estimates at each time point, as described in the Methods section.
 
@@ -785,18 +772,18 @@ Consequently, we looked for model misspecification by comparing the conditional 
  \hline
   & PAL & SMC  \\
   \hline
- OvOv & \Sexpr{palfilter_lik_list_wwr$log_lik} & $\Sexpr{logmeanexp(logLik(pfilter_wwr))}$ \\ 
+ OvOv & \Sexpr{round(palfilter_lik_list_wwr$log_lik,2)} & $\Sexpr{round(logmeanexp(logLik(pfilter_wwr),2))}$ \\ 
  \hline
 \end{tabular}
 \end{table}
 
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.9\textwidth]{thesis-figs/cond_SMC_PAL_realdat.png}
-\caption{\label{fig:cond_SMC_PAL_realdat}Conditional log-likelihoods computed using two methods for the real rotavirus dataset, with the SMC method replicated 36 times due to its high variances. The blue line represents overlapping results from 36 SMC computations, while the red line is derived from PAL. The main sources of likelihood shortfall of SMC are at time points $t=1, 2, 3, 11, 81, 194$, and $325-333$.}
-\end{figure}
+% \begin{figure}[H]
+% \centering
+% \includegraphics[width=0.9\textwidth]{thesis-figs/cond_SMC_PAL_realdat.png}
+% \caption{\label{fig:cond_SMC_PAL_realdat}Conditional log-likelihoods computed using two methods for the real rotavirus dataset, with the SMC method replicated 36 times due to its high variances. The blue line represents overlapping results from 36 SMC computations, while the red line is derived from PAL. The main sources of likelihood shortfall of SMC are at time points $t=1, 2, 3, 11, 81, 194$, and $325-333$.}
+% \end{figure}
 
-Figure~ \ref{fig:cond_SMC_PAL_realdat} indicates that the worst conditional log-likelihood values, estimated using the particle filter, arise at the start of the time series.
+Figure~2 indicates that the worst conditional log-likelihood values, estimated using the particle filter, arise at the start of the time series.
 This could be a problem with data collection, or some subtle issue with the science of the epidemiological system, but a simple possibility is that the initial values of the latent state process might be poorly specified.
 For this model, the initial values were fixed based on scientific reasoning, rather than being estimated.
 If we instead estimate the initial values, we obtain the results in Table~\ref{tab:mlebywwr}. 
@@ -857,17 +844,14 @@ However, the corrected evidence does not indicate an advantage for using PAL in 
 
 \ed{BRIEFLY DESCRIBE HERE ANY DETAILS NEEDED TO DESCRIBE THE RESULTS. COMMENT ON CODE AVAILABILITY.}
 
-To evaluate whether SMC performs as well as PAL in terms of both computational time and likelihood identifiability, we replicated the model using the R package \textbf{pomp} \citep{pomppackagepaper}. First, we verified that the two models are essentially identical. Here, we simulated data from the model 1000 times at the MLE shown in Table \ref{tab:mlebywwr} and compared the summary statistics of 1000 simulated time series from two models using the t-test. Summary statistics including the mean, median, and variance for all three age groups were tested. The results showed no significant differences between the two models from which the data were simulated, confirming that both the latent process model and the observation model are essentially consistent with each other, given that the observations were directly simulated.
+To evaluate whether SMC performs as well as PAL in terms of both computational time and likelihood identifiability, we replicated the model using the R package \textbf{pomp} \citep{pomppackagepaper}. First, we verified that the two models are essentially identical. Here, we simulated data from the two models 1000 times at the MLE shown in Table \ref{tab:mlebywwr} and compared the summary statistics of 1000 simulated time series from two models using the t-test. Summary statistics including the mean, median, and variance for all three age groups were tested. The results showed no significant differences between the two models from which the data were simulated, confirming that both the latent process model and the observation model are essentially consistent with each other, given that the observations were directly simulated. From Table \ref{tab:mlebywwr}, it is evident that the OvOv model, with overdispersion in both the dynamic system and the measurement model, yields the lowest AIC. We therefore focus on this version of the model.
 
-From Table \ref{tab:model_performance}, it is evident that the OvOv model, with overdispersion in both the dynamic system and the measurement model, yields the lowest AIC.
-We therefore focus on this version of the model.
-
-This article has focused on likelihood evaluation, but the inferences presented also require the likelihood estimate to maximized.
+This article has focused on likelihood evaluation, but the inferences presented also require the likelihood estimate to be maximized.
 \cite{stocks} used iterated filtering to maximize the particle filter likelihood estimate, whereas \cite{wwr} used direct numerical maximization.
 We follow the approaches adopted by these two papers.
 The optimization method is not directly pertinent to the comparison of the filtering methods, so we do not discuss optimization in further detail here.
 
-An extended description of our reanalysis of \cite{wwr} is provided by \cite{hao24}.
+Our workflow is fully reproducible. An extended description of our reanalysis of \cite{wwr} is provided by \cite{hao24}.
 That thesis also contains some additional results reinforcing the conclusions presented in this article.
 
 
