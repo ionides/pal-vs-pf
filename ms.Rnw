@@ -46,12 +46,12 @@ A novel Poisson approximate likelihood (PAL) filter was introduced by \cite{wwr}
 PAL employs a Poisson approximation to conditional densities, offering a fast and consistent approximation to the likelihood function for a certain subset of partially observed Markov process models.
 \cite{wwr} supported the importance of their contribution by theoretical analysis and numerical results.
 A central piece of evidence for PAL is the comparison in Table~1 of \cite{wwr}, which claims a large improvement for PAL over a standard particle filter algorithm.
-This evidence, based on a model and data from a previous scientific study, might suggests that researchers confronted with similar models should use PAL rather than previous particle filter methods.
-Alternatively, the improvement in likelihood demonstrated over the results presented by \cite{stocks} might indicate an error in that previous work.
+This evidence, based on a model and data from a previous scientific study by \citet{stocks}, might suggests that researchers confronted with similar models should use PAL rather than previous particle filter methods.
+Alternatively, the improvement in likelihood found by \cite{wwr} compared to \cite{stocks} might indicate a weakness in that previous work.
 We show that the comparison of log-likelihood values made by \cite{wwr} is flawed because the PAL calculations were carried out using a dataset scaled differently from the previous study.
 If PAL and the particle filter are used on this new scale, the superficial advantage of PAL largely disappears.
 On simulations where the model is correctly specified, the particle filter outperforms PAL.
-If a poorly fitting specification of initial value parameters is amended, the particle filter also outperforms PAL on the actual data. Nevertheless, PAL still yields reliable results and demonstrates superiority in computational time.
+If a poorly fitting specification of initial value parameters is amended, the particle filter also outperforms PAL on the actual data.
 \end{abstract}
 
 
@@ -511,12 +511,15 @@ est_mle_vec <- el_03[which.max(el_03$logLik),]
 
 This article results from an investigation of the results in Table~1 of \citet{wwr}.
 The authors of that paper were given the opportunity to submit a correction, after we shared the results of our investigation with them, but they declined.
+The theory developed by \cite{wwr} shows that PAL has some potentially useful scaling properties, but the numerical results in Table~1 appear to show much stronger performance than a standard particle filter on this example of moderate size.
 Our task here is to correct the error in Table~1 so that researchers considering whether to implement Poisson approximate likelihood (PAL) are appropriately informed about its benefits.
 Table~1 reanalyzes the model and data of \citet{stocks}, for which the likelihood was calculated using a particle filter.
-The theory developed by \cite{wwr} shows that PAL has some potentially useful scaling properties, but the numerical results in Table~1 appear to show much stronger performance than the particle filter on this example of moderate size.
+\citet{stocks} found strong evidence for the importance of overdispersion in a stochastic dynamic model for their epidemiological data.
+This is significant because earlier research on population dynamics largely avoided consideration of overdispersion, perhaps because of the lack of statistical methodology to fit such models. 
+The conclusions of \cite{stocks} hinge on a comparison of likelihoods, and so the results of \citet{wwr} discredit those conclusions by indicating that \citet{stocks} used an inaccurate filter to calculate their likelihoods.
+An important consequence of correcting Table~1 is that the results of \cite{stocks} stand undiminished. 
 
-First, we show that most of this apparent improvement for PAL arises because \cite{wwr} used a different scaling of the data from \cite{stocks}.
-%% \section{Comparing PAL with the particle filter} 
+First, we show that most of the apparent advantage for PAL, compared to a particle filter, arises because \cite{wwr} used a different scaling of the data from \cite{stocks}.
 Two models for the same data can properly be compared by their likelihood, even if the models have entirely different structures.
 One can make allowance for the number of estimated parameters using a quantity such as Akaike's information criterion \citep{Akaike1974ANL}.
 However, if data are rescaled, a correction is required to make likelihoods comparable.
