@@ -523,7 +523,7 @@ First, we show that most of the apparent advantage for PAL, compared to a partic
 Two models for the same data can properly be compared by their likelihood, even if the models have entirely different structures.
 One can make allowance for the number of estimated parameters using a quantity such as Akaike's information criterion \citep{Akaike1974ANL}.
 However, if data are rescaled, a correction is required to make likelihoods comparable.
-If one model describes a dataset in grams, and another describes it in kilograms, then the latter model will earn an increased log-likelihood of $\log(10^3)$ for each data point simply because of the change in scale.
+For example, if one model describes a dataset in grams and another describes it in kilograms, then the latter model will earn an increased log-likelihood of $\log(10^3)$ for each data point simply because of the change in scale.
 Presenting a direct comparison of a likelihood for the data in grams with a likelihood for the data in kilograms would evidently be inappropriate.
 \cite{stocks} fitted their model to a dataset derived by dividing the original reported count data by an estimated reporting rate, to put their data on the scale of the actual number of cases in the population, whereas \cite{wwr} fitted directly to the report data.
 The reporting rate used by \cite{stocks} varied over time, but was generally around $7\%$.
@@ -633,11 +633,10 @@ bake(file = paste0(out_dir, "pfilter/simulated_dataset/palfilter_ovov_sim_100.rd
   palfilter_ovov_sim_computation
 }) -> palfilter_ovov_sim_100
 
-# lik_list$ll_storage |> sum()
 @
 
 
-<<plot1-100-sim-compare,echo=FALSE, fig.height=4, fig.width=5.5, fig.cap='Log-likelihoods computed using two filtering methods for 100 randomly simulated datasets at the MLE of the OvOv model.The particle filter and PAL used 50,000 particles.The red line is the line $Lik(pfilter)=Lik(palfilter)$.On average, the particle filter likelihood is $7.7$ log units higher than the PAL.'>>=
+<<plot1-100-sim-compare,echo=FALSE, fig.height=4, fig.width=5.5, fig.cap='Log-likelihoods computed using two filtering methods for 100 randomly simulated datasets at the MLE of the OvOv model. The particle filter and PAL used 50,000 particles. The red line corresponds to equality of the two estimates. On average, the particle filter likelihood estimate is $7.7$ log units higher than the PAL.'>>=
 data <- data.frame(
   pfilter = pfilter_ovov_sim_100, 
   palfilter = palfilter_ovov_sim_100
@@ -763,13 +762,14 @@ Possible explanations for PAL obtaining a higher log-likelihood than a particle 
 Log-likelihood is a proper scoring rule for forecasts \cite{gneiting2}, and both the particle filter and PAL construct their log-likelihood estimates via a sequence of one-step forecasts.
 Therefore, if the model is correctly specified, the approximation error in PAL can only decrease the expected log-likelihood.
 We tested this on simulated data, for which the model of \cite{wwr} is correctly specified.
-We found that, in this case, the particle filter out-performs PAL (Figure~1).
-This supports hypothesis 2, above.
+We focus on the version of the model with overdispersion in both the population dynamics and the measurement process.
+This version of the model, called OvOv, was found by both \cite{wwr} and \cite{stocks} to be the best choice to fit the data.
+For this simulation study, the particle filter out-performs PAL (Figure~1) which supports hypothesis 2, above.
 Consequently, we looked for model misspecification by comparing the conditional log-likelihood estimates at each time point, as described in the Methods section.
 
 \begin{table}[ht] % The placement specifier can be [h!tbp]
 \centering % Centers the table
-\caption{log-likelihood at the MLE of OvOv model for the real rotavirus data, computed using two filtering methods, employed 36 replicates and 50,000 particles} % This is effectively the table title
+\caption{log-likelihood at the MLE of OvOv model for the real rotavirus data, computed using two filtering methods, employed 36 replicates and 50,000 particles} 
 \label{tab:ovovrealdata} % For referencing this table elsewhere in your text
 \begin{tabular}{|c c c|} 
  \hline
@@ -794,34 +794,32 @@ If we instead estimate the initial values, we obtain the results in Table~\ref{t
 \begin{table}[htbp]
   \centering
   \begin{threeparttable}
-    \caption{Maximum likelihood estimation of parameters by PAL for three models \citep{wwr}, and by mif2 algorithm \citep{pomppackagepaper} for the OvOv model.
-    \ed{LET'S DISCUSS WHETHER WE WANT TO SHOW JUST OV-OV HERE. IT WOULD BE SIMPLER.}
+    \caption{Maximum likelihood estimation of parameters by PAL \citep{wwr}, and by mif2 algorithm \citep{pomppackagepaper} for the OvOv model.}
     }
     \label{tab:mlebywwr}
-    \begin{tabular}{>{\raggedright\arraybackslash}p{2cm} *{3}{>{\centering\arraybackslash}p{1.5cm}} >{\centering\arraybackslash}p{2.5cm}}
+    \begin{tabular}
       \toprule
-      Parameter      & EqEq  & EqOv  & OvOv  & OvOv (\textbf{pomp})$^*$ \\
+      Parameter      & OvOv  & OvOv (\textbf{pomp})$^*$ \\
       \midrule
-      \(\beta_1\)    & 12.15 & 12.74 & 11.48 & $\Sexpr{round(est_mle_vec["beta1"],2)}$\\
-      \(\beta_2\)    & 0.22  & 0.21  & 0.25  & $\Sexpr{round(est_mle_vec["beta2"],2)}$\\
-      \(\beta_3\)    & 0.34  & 0.31  & 0.35  & $\Sexpr{round(est_mle_vec["beta3"],2)}$\\
-      \(\phi\)       & 0.017 & 0.14  & 0.14  & $\Sexpr{round(est_mle_vec["phi"],2)}$\\
-      \(\rho\)       & 0.022 & 0.19  & 0.16  & $\Sexpr{round(est_mle_vec["beta11"],2)}$\\
-      \(\sigma^2_q\) & n/a   & 0.042 & 0.021 & $\Sexpr{round(est_mle_vec["sigma_q"],3)}$\\
-      \(\sigma_\xi\) & n/a   & n/a   & 66.89 & $\Sexpr{round(est_mle_vec["sigma_xi"],2)}$\\
-      \addlinespace
-      \multicolumn{1}{l}{\(S_{10}\)} & \multicolumn{3}{c}{$3876549^*$} & $\Sexpr{round(pop*est_mle_vec["S10"],0)}$\\
-      \multicolumn{1}{l}{\(I_{10}\)} & \multicolumn{3}{c}{$30351$}     & $\Sexpr{round(pop*est_mle_vec["I10"],0)}$\\
-      \multicolumn{1}{l}{\(R_{10}\)} & \multicolumn{3}{c}{$1315221$}   & $\Sexpr{round(pop*est_mle_vec["R10"],0)}$\\
-      \multicolumn{1}{l}{\(S_{20}\)} & \multicolumn{3}{c}{$57139612$}  & $\Sexpr{round(pop*est_mle_vec["S20"],0)}$\\
-      \multicolumn{1}{l}{\(I_{20}\)} & \multicolumn{3}{c}{$871$}       & $\Sexpr{round(pop*est_mle_vec["I20"],0)}$\\
-      \multicolumn{1}{l}{\(R_{20}\)} & \multicolumn{3}{c}{$302852$}    & $\Sexpr{round(pop*est_mle_vec["R20"],0)}$\\
-      \multicolumn{1}{l}{\(S_{30}\)} & \multicolumn{3}{c}{$19573727$}  & $\Sexpr{round(pop*est_mle_vec["S30"],0)}$\\
-      \multicolumn{1}{l}{\(I_{30}\)} & \multicolumn{3}{c}{$2550$}      & $\Sexpr{round(pop*est_mle_vec["I30"],0)}$\\
-      \multicolumn{1}{l}{\(R_{30}\)} & \multicolumn{3}{c}{$131092$}    & $\Sexpr{round(pop*est_mle_vec["R30"],0)}$\\
+      \(\beta_1\)    & 11.48 & $\Sexpr{round(est_mle_vec["beta1"],2)}$\\
+      \(\beta_2\)    & 0.25  & $\Sexpr{round(est_mle_vec["beta2"],2)}$\\
+      \(\beta_3\)    & 0.35  & $\Sexpr{round(est_mle_vec["beta3"],2)}$\\
+      \(\phi\)       & 0.14  & $\Sexpr{round(est_mle_vec["phi"],2)}$\\
+      \(\rho\)       & 0.16  & $\Sexpr{round(est_mle_vec["beta11"],2)}$\\
+      \(\sigma^2_q\) & 0.021 & $\Sexpr{round(est_mle_vec["sigma_q"],3)}$\\
+      \(\sigma_\xi\) & 66.89 & $\Sexpr{round(est_mle_vec["sigma_xi"],2)}$\\
+      \(S_{10}\) & 3876549 & $\Sexpr{round(pop*est_mle_vec["S10"],0)}$\\
+      \(I_{10}\) & 30351     & $\Sexpr{round(pop*est_mle_vec["I10"],0)}$\\
+      \(R_{10}\) & 1315221   & $\Sexpr{round(pop*est_mle_vec["R10"],0)}$\\
+      \(S_{20}\) & 57139612  & $\Sexpr{round(pop*est_mle_vec["S20"],0)}$\\
+      \(I_{20}\) & 871     & $\Sexpr{round(pop*est_mle_vec["I20"],0)}$\\
+      \(R_{20}\) & 302852    & $\Sexpr{round(pop*est_mle_vec["R20"],0)}$\\
+     \(S_{30}\) & 19573727  & $\Sexpr{round(pop*est_mle_vec["S30"],0)}$\\
+      \(I_{30}\) & 2550    & $\Sexpr{round(pop*est_mle_vec["I30"],0)}$\\
+      \(R_{30}\) & 131092   & $\Sexpr{round(pop*est_mle_vec["R30"],0)}$\\
       \midrule
       \addlinespace
-      \textbf{AIC}  & $98866.65$ & $15154.75$ & $13778.08$ & $\Sexpr{round(2*((length(params_wwr) - length(params_fixed)) - est_mle_vec["logLik"]),2)}$\\
+      \textbf{AIC}  & $13778.08$ & $\Sexpr{round(2*((length(params_wwr) - length(params_fixed)) - est_mle_vec["logLik"]),2)}$\\
       \addlinespace
       \bottomrule
     \end{tabular}
