@@ -406,7 +406,6 @@ design_matrix <- runif_design(
 )
 
 bake(file = paste0(out_dir, "mif2_maximization/round_01/mifs_global_01.rds"),{ 
-  registerDoFuture()
   plan(multicore, workers = ncores)
   foreach(i = 1:ncores, .options.future = list(seed = 652643293)) %dofuture% {
     pomp::mif2(
@@ -443,7 +442,6 @@ sd_02 = 2/3
 starting_values_02 <- choose_n_fits(el_01, top_n_fits, ncores)
 
 bake(file = paste0(out_dir,"mif2_maximization/round_02/mifs_global_02.rds"),{ 
-  registerDoFuture()
   plan(multicore, workers = ncores)
   foreach(i = 1:ncores, .options.future = list(seed = 652643293)) %dofuture% {
     pomp::mif2(
@@ -475,7 +473,6 @@ sd_03 = (2/3)^2
 starting_values_03 <- choose_n_fits(el_02, top_n_fits, ncores)
 
 bake(file = paste0(out_dir, "mif2_maximization/round_03/mifs_global_03.rds"),{ 
-  registerDoFuture()
   plan(multicore, workers = ncores)
   foreach(i = 1:ncores, .options.future = list(seed = 652643293)) %dofuture% {
     pomp::mif2(
@@ -538,8 +535,6 @@ We continued our investigation to establish the cause of this.
 <<sim-100, echo=F, warning=F, message=F>>=
 bake(file = paste0(out_dir, "pfilter/simulated_dataset/ovov_sim_100.rds"),{
   ovov_sim_computation <- list()
-  registerDoFuture()
-  plan(multicore, workers = ncores)
   
   i <- 1
   repeat {
@@ -565,8 +560,6 @@ bake(file = paste0(out_dir, "pfilter/simulated_dataset/ovov_sim_100.rds"),{
 bake(file = paste0(out_dir, "pfilter/simulated_dataset/pfilter_ovov_sim_100.rds"),{
   pfilter_obj <- list()
   pfilter_ovov_sim_computation <- c()
-  registerDoFuture()
-  plan(multicore, workers = ncores)
   
   for(i in 1:length(ovov_sim_100)){
     pomp(
@@ -583,6 +576,8 @@ bake(file = paste0(out_dir, "pfilter/simulated_dataset/pfilter_ovov_sim_100.rds"
       partrans = pt_wwr,
       params = params_wwr
     )  -> pfilter_obj[[i]]
+    
+    plan(multicore, workers = ncores)
     
     foreach(j = 1:ncores, .combine = c,
       .options.future = list(seed = 998468235L)
@@ -607,8 +602,6 @@ init_dist <- c(
 initial_guess <- c(11.48, 0.25, 0.35, 0.14, 0.16, 0.021, 66.89)
 
 bake(file = paste0(out_dir, "pfilter/simulated_dataset/palfilter_ovov_sim_100.rds"),{
-  palfilter_ovov_sim_computation <- c()
-  registerDoFuture()
   plan(multicore, workers = ncores)
   foreach(
     i = 1:length(ovov_sim_100), .combine = c, .options.future = list(seed = 998468235L)
@@ -628,13 +621,12 @@ bake(file = paste0(out_dir, "pfilter/simulated_dataset/palfilter_ovov_sim_100.rd
       n_particles = NP_MIF,
       ncores = ncores
     )
-    palfilter_ovov_sim_computation[i] <- lik_list$log_lik
+    lik_list$log_lik
   }
-  palfilter_ovov_sim_computation
 }) -> palfilter_ovov_sim_100
 
+# lik_list$ll_storage |> sum()
 @
-
 
 <<plot1-100-sim-compare,echo=FALSE, fig.height=4, fig.width=5.5, fig.cap='Log-likelihoods computed using two filtering methods for 100 randomly simulated datasets at the MLE of the OvOv model. The particle filter and PAL used 50,000 particles. The red line corresponds to equality of the two estimates. On average, the particle filter likelihood estimate is $7.7$ log units higher than the PAL.'>>=
 data <- data.frame(
@@ -656,19 +648,16 @@ theme_minimal()
 
 <<pfilter_wwr, echo=FALSE, message=FALSE, warning=FALSE>>=
 bake(file = paste0(out_dir, "pfilter/original_dataset/pfilter_wwr.rds"),{
-registerDoFuture()
-plan(multicore, workers = ncores)
-foreach(
-i = 1:ncores, .combine = c, .options.future = list(seed = 998468235L)
-) %dofuture% {
-pfilter(sir_wwr, Np = NP_MIF, params = params_wwr)
-} 
+  plan(multicore, workers = ncores)
+  foreach(
+    i = 1:ncores, .combine = c, .options.future = list(seed = 998468235L)
+  ) %dofuture% {
+      pfilter(sir_wwr, Np = NP_MIF, params = params_wwr)
+    } 
 }) ->  pfilter_wwr
 
 bake(file = paste0(out_dir, "pfilter/original_dataset/pfilter_wwr_cond_lik.rds"),{
   pfilter_wwr_cond_lik_computation <- list()
-  registerDoFuture()
-  plan(multicore, workers = ncores)
   for(k in 1:ncores){
     pfilter_wwr_cond_lik_computation[[k]] <- pfilter_wwr[[k]]@cond.logLik
   }
@@ -795,32 +784,29 @@ If we instead estimate the initial values, we obtain the results in Table~\ref{t
   \centering
   \begin{threeparttable}
     \caption{Maximum likelihood estimation of parameters by PAL \citep{wwr}, and by mif2 algorithm \citep{pomppackagepaper} for the OvOv model.}
-    }
     \label{tab:mlebywwr}
-    \begin{tabular}
+    \begin{tabular}{lcc}  % Left-aligned for the first column, centered for the other two columns
       \toprule
-      Parameter      & OvOv  & OvOv (\textbf{pomp})$^*$ \\
+      Parameter      & OvOv      & OvOv (\textbf{pomp})$^*$ \\
       \midrule
-      \(\beta_1\)    & 11.48 & $\Sexpr{round(est_mle_vec["beta1"],2)}$\\
-      \(\beta_2\)    & 0.25  & $\Sexpr{round(est_mle_vec["beta2"],2)}$\\
-      \(\beta_3\)    & 0.35  & $\Sexpr{round(est_mle_vec["beta3"],2)}$\\
-      \(\phi\)       & 0.14  & $\Sexpr{round(est_mle_vec["phi"],2)}$\\
-      \(\rho\)       & 0.16  & $\Sexpr{round(est_mle_vec["beta11"],2)}$\\
-      \(\sigma^2_q\) & 0.021 & $\Sexpr{round(est_mle_vec["sigma_q"],3)}$\\
-      \(\sigma_\xi\) & 66.89 & $\Sexpr{round(est_mle_vec["sigma_xi"],2)}$\\
-      \(S_{10}\) & 3876549 & $\Sexpr{round(pop*est_mle_vec["S10"],0)}$\\
-      \(I_{10}\) & 30351     & $\Sexpr{round(pop*est_mle_vec["I10"],0)}$\\
-      \(R_{10}\) & 1315221   & $\Sexpr{round(pop*est_mle_vec["R10"],0)}$\\
-      \(S_{20}\) & 57139612  & $\Sexpr{round(pop*est_mle_vec["S20"],0)}$\\
-      \(I_{20}\) & 871     & $\Sexpr{round(pop*est_mle_vec["I20"],0)}$\\
-      \(R_{20}\) & 302852    & $\Sexpr{round(pop*est_mle_vec["R20"],0)}$\\
-     \(S_{30}\) & 19573727  & $\Sexpr{round(pop*est_mle_vec["S30"],0)}$\\
-      \(I_{30}\) & 2550    & $\Sexpr{round(pop*est_mle_vec["I30"],0)}$\\
-      \(R_{30}\) & 131092   & $\Sexpr{round(pop*est_mle_vec["R30"],0)}$\\
+      \(\beta_1\)    & 11.48     & $\Sexpr{round(est_mle_vec["beta1"],2)}$\\
+      \(\beta_2\)    & 0.25      & $\Sexpr{round(est_mle_vec["beta2"],2)}$\\
+      \(\beta_3\)    & 0.35      & $\Sexpr{round(est_mle_vec["beta3"],2)}$\\
+      \(\phi\)       & 0.14      & $\Sexpr{round(est_mle_vec["phi"],2)}$\\
+      \(\rho\)       & 0.16      & $\Sexpr{round(est_mle_vec["beta11"],2)}$\\
+      \(\sigma^2_q\) & 0.021     & $\Sexpr{round(est_mle_vec["sigma_q"],3)}$\\
+      \(\sigma_\xi\) & 66.89     & $\Sexpr{round(est_mle_vec["sigma_xi"],2)}$\\
+      \(S_{10}\)     & 3876549   & $\Sexpr{round(pop*est_mle_vec["S10"],0)}$\\
+      \(I_{10}\)     & 30351     & $\Sexpr{round(pop*est_mle_vec["I10"],0)}$\\
+      \(R_{10}\)     & 1315221   & $\Sexpr{round(pop*est_mle_vec["R10"],0)}$\\
+      \(S_{20}\)     & 57139612  & $\Sexpr{round(pop*est_mle_vec["S20"],0)}$\\
+      \(I_{20}\)     & 871       & $\Sexpr{round(pop*est_mle_vec["I20"],0)}$\\
+      \(R_{20}\)     & 302852    & $\Sexpr{round(pop*est_mle_vec["R20"],0)}$\\
+      \(S_{30}\)     & 19573727  & $\Sexpr{round(pop*est_mle_vec["S30"],0)}$\\
+      \(I_{30}\)     & 2550      & $\Sexpr{round(pop*est_mle_vec["I30"],0)}$\\
+      \(R_{30}\)     & 131092    & $\Sexpr{round(pop*est_mle_vec["R30"],0)}$\\
       \midrule
-      \addlinespace
-      \textbf{AIC}  & $13778.08$ & $\Sexpr{round(2*((length(params_wwr) - length(params_fixed)) - est_mle_vec["logLik"]),2)}$\\
-      \addlinespace
+      \textbf{AIC}  & 13778.08  & $\Sexpr{round(2*((length(params_wwr) - length(params_fixed)) - est_mle_vec["logLik"]),2)}$\\
       \bottomrule
     \end{tabular}
     \begin{tablenotes}
