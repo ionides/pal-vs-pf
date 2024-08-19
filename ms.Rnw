@@ -605,7 +605,7 @@ bake(file = paste0(out_dir, "pfilter/simulated_dataset/pfilter_ovov_sim_100.rds"
       .options.future = list(seed = 998468235L)
     ) %dofuture% {
       pfilter(
-        pfilter_obj[[i]], Np = NP_MIF, save.states = TRUE, params = params_wwr
+        pfilter_obj[[i]], Np = NP_MIF, save.states = FALSE, params = params_wwr
       )
     } -> pfs
     pfilter_ovov_sim_computation[i] <- logmeanexp(logLik(pfs))  
