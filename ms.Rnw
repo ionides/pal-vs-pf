@@ -4,7 +4,7 @@
 \usepackage{booktabs} % For better-quality horizontal lines
 \usepackage{multirow}
 \usepackage{makecell}
-\usepackage{threeparttable} % For table notes
+% \usepackage{threeparttable} % For table notes
 \usepackage{array} % For table formatting
 \usepackage{subcaption}
 \usepackage{setspace} % For double-line spacing
@@ -44,11 +44,10 @@
 Filtering algorithms are fundamental for inference on partially observed stochastic dynamic systems, since they provide access to the likelihood function and hence enable likelihood-based or Bayesian inference.
 A novel Poisson approximate likelihood (PAL) filter was introduced by \cite{wwr}.
 PAL employs a Poisson approximation to conditional densities, offering a fast and consistent approximation to the likelihood function for a certain subset of partially observed Markov process models.
-\cite{wwr} supported the importance of their contribution by theoretical analysis and numerical results.
 A central piece of evidence for PAL is the comparison in Table~1 of \cite{wwr}, which claims a large improvement for PAL over a standard particle filter algorithm.
 This evidence, based on a model and data from a previous scientific study by \citet{stocks}, might suggests that researchers confronted with similar models should use PAL rather than previous particle filter methods.
-Alternatively, the improvement in likelihood found by \cite{wwr} compared to \cite{stocks} might indicate a weakness in that previous work.
-We show that the comparison of log-likelihood values made by \cite{wwr} is flawed because the PAL calculations were carried out using a dataset scaled differently from the previous study.
+Alternatively, the improvement in likelihood found by \cite{wwr} compared to \cite{stocks} might indicate a flaw in the model or numerical methods for that previous work.
+We show that neither of these conclusions is valid, and the comparison of log-likelihood values made by \cite{wwr} is flawed because the PAL calculations were carried out using a dataset scaled differently from the previous study.
 If PAL and the particle filter are used on this new scale, the superficial advantage of PAL largely disappears.
 On simulations where the model is correctly specified, the particle filter outperforms PAL.
 If a poorly fitting specification of initial value parameters is amended, the particle filter also outperforms PAL on the actual data.
@@ -506,31 +505,54 @@ est_mle_vec <- el_03[which.max(el_03$logLik),]
 
 \section{Introduction}
 
-This article results from an investigation of the results in Table~1 of \citet{wwr}.
-The authors of that paper were given the opportunity to submit a correction, after we shared the results of our investigation with them, but they declined.
-The theory developed by \cite{wwr} shows that PAL has some potentially useful scaling properties, but the numerical results in Table~1 appear to show much stronger performance than a standard particle filter on this example of moderate size.
+This article results from an investigation of the results presented by \citet{wwr} (henceforth, WWR) in their Table~1.
+WWR were given the opportunity to submit a correction, after we shared the results of our investigation with them, but they declined.
+The theory developed by \cite{wwr} shows that PAL has some potentially useful scaling properties, but the numerical results in Table~1 appear to show much stronger performance than a standard particle filter on an example of scientific interest but moderate size.
 Our task here is to correct the error in Table~1 so that researchers considering whether to implement Poisson approximate likelihood (PAL) are appropriately informed about its benefits.
-Table~1 reanalyzes the model and data of \citet{stocks}, for which the likelihood was calculated using a particle filter.
-\citet{stocks} found strong evidence for the importance of overdispersion in a stochastic dynamic model for their epidemiological data.
-This is significant because earlier research on population dynamics largely avoided consideration of overdispersion, perhaps because of the lack of statistical methodology to fit such models. 
-The conclusions of \cite{stocks} hinge on a comparison of likelihoods, and so the results of \citet{wwr} discredit those conclusions by indicating that \citet{stocks} used an inaccurate filter to calculate their likelihoods.
-An important consequence of correcting Table~1 is that the results of \cite{stocks} stand undiminished. 
 
-First, we show that most of the apparent advantage for PAL, compared to a particle filter, arises because \cite{wwr} used a different scaling of the data from \cite{stocks}.
+Table~1 of WWR reanalyzes the model and data of \citet{stocks} (henceforth, SBH) for which the likelihood was calculated using a particle filter.
+SBH found strong evidence for the importance of overdispersion in a stochastic dynamic model for their epidemiological data.
+This is significant because earlier research on population dynamics largely avoided consideration of overdispersion, perhaps because of the lack of statistical methodology to fit such models. 
+The conclusions of SBH hinge on a comparison of likelihoods, and so the results of WWR discredit those conclusions by indicating that SBH used an inaccurate filter to calculate their likelihoods.
+An important consequence of correcting Table~1 is that the results of SBH stand undiminished. 
+
+SBH and WWR each fitted three different rotavirus models.
+The first has equidispersion (i.e., no overdispersion) in the measurement model and the dynamic model, and is called
+EqEq.
+The second, EqOv, includes overdispersion in only the measurement model.
+The third, OvOv, includes overdispersion in both these model components.
+We focus on OvOv, which both SBH and WWR find to be the best fitting model. 
+However, WWR report in Table~1 that their EqOv model fits better than the SBH OvOv model, from which one might conclude that the use of PAL is more important than the decision of whether to include overdispersion in the process model.
+
+We show that most of the apparent advantage for PAL, compared to a particle filter, arises because \cite{wwr} used a different scaling of the data from \cite{stocks}.
 Two models for the same data can properly be compared by their likelihood, even if the models have entirely different structures.
 One can make allowance for the number of estimated parameters using a quantity such as Akaike's information criterion \citep{Akaike1974ANL}.
 However, if data are rescaled, a correction is required to make likelihoods comparable.
 For example, if one model describes a dataset in grams and another describes it in kilograms, then the latter model will earn an increased log-likelihood of $\log(10^3)$ for each data point simply because of the change in scale.
 Presenting a direct comparison of a likelihood for the data in grams with a likelihood for the data in kilograms would evidently be inappropriate.
+
 \cite{stocks} fitted their model to a dataset derived by dividing the original reported count data by an estimated reporting rate, to put their data on the scale of the actual number of cases in the population, whereas \cite{wwr} fitted directly to the report data.
 The reporting rate used by \cite{stocks} varied over time, but was generally around $7\%$.
 On approximately 1200 data points, this corresponds to a discrepancy of around $-1200\log(0.07) \approx 3200$ log-likelihood units, largely explaining the difference reported in Table~1 and interpreted by \cite{wwr} as evidence supporting PAL.
-The comparison can be corrected either by applying the method of \cite{stocks} to the data of \cite{wwr} or vice versa.
-Since the method of \cite{stocks} is applicable to a more general class of models, and supported by published software, it was more convenient to apply this method to the model and data of \cite{wwr}.
+The comparison can be corrected either by applying the method of SBH to the data of WWR or vice versa.
+Since the method of SBH is applicable to a more general class of models, and supported by published software, it was convenient to apply the SBH method to the model and data of WWR.
 The large discrepancy in log-likelihood disappears at this point by recomputing the likelihood of the model using PAL and particle filter separately (see Table~\ref{tab:ovovrealdata}).
 This re-analysis does, however, show a discrepancy between two methods.
 We continued our investigation to establish the cause of this.
+We discovered that WWR (unlike SBH) used a poorly fitting choice of initial conditions for the latent process in January 2001 (their time 0). 
 
+\begin{table}[ht] % The placement specifier can be [h!tbp]
+\centering % Centers the table
+\caption{log-likelihood at the MLE of OvOv model for the real rotavirus data, computed using two filtering methods, employed 36 replicates and 50,000 particles} 
+\label{tab:ovovrealdata} % For referencing this table elsewhere in your text
+\begin{tabular}{|c c c|} 
+ \hline
+  & PAL & SMC  \\
+  \hline
+ OvOv & \Sexpr{round(palfilter_lik_list_wwr$log_lik,2)} & $\Sexpr{round(logmeanexp(logLik(pfilter_wwr),2))}$ \\ 
+ \hline
+\end{tabular}
+\end{table}
 
 <<sim-100, echo=F, warning=F, message=F>>=
 bake(file = paste0(out_dir, "pfilter/simulated_dataset/ovov_sim_100.rds"),{
@@ -730,64 +752,18 @@ ggplot(df, aes(x = time, y = cond_loglik, color = method)) +
 
 
 
-% \begin{figure}[h]
-% \centering
-% \includegraphics[width=0.55\textwidth]{thesis-figs/PAL_vs_SMC_ovov_100.png}
-% \caption{\label{fig:PAL_vs_SMC_ovov_100}Log-likelihoods computed using two filtering methods for 100 randomly simulated datasets at the MLE of the OvOv model.
-% The particle filter and PAL used 50,000 particles.
-% The red line is the line $Lik(pfilter)=Lik(palfilter)$.
-% On average, the particle filter likelihood is $7.7$ log units higher than the PAL.
-% %%  -6224.245 - (-6231.97) = 7.725
-% }
-% \end{figure}
-
-
-PAL provides an approximate filter, whereas the particle filter provides a Monte~Carlo estimate of an exact filter.
-Possible explanations for PAL obtaining a higher log-likelihood than a particle filter include:
-\begin{enumerate}
-\item The particle filter could have high Monte Carlo variance. This results in negative bias in its log-likilihood estimate due to Jensen's inequality, since the particle filter provides an unbiased likelihood estimate.
-\item If the model is misspecified, the approximation error in PAL could lead to a higher log-likelihood estimate than that of the actual misspecified model.
-\end{enumerate}
-Log-likelihood is a proper scoring rule for forecasts \cite{gneiting2}, and both the particle filter and PAL construct their log-likelihood estimates via a sequence of one-step forecasts.
-Therefore, if the model is correctly specified, the approximation error in PAL can only decrease the expected log-likelihood.
-We tested this on simulated data, for which the model of \cite{wwr} is correctly specified.
-We focus on the version of the model with overdispersion in both the population dynamics and the measurement process.
-This version of the model, called OvOv, was found by both \cite{wwr} and \cite{stocks} to be the best choice to fit the data.
-For this simulation study, the particle filter out-performs PAL (Figure~1) which supports hypothesis 2, above.
-Consequently, we looked for model misspecification by comparing the conditional log-likelihood estimates at each time point, as described in the Methods section.
-
-\begin{table}[ht] % The placement specifier can be [h!tbp]
-\centering % Centers the table
-\caption{log-likelihood at the MLE of OvOv model for the real rotavirus data, computed using two filtering methods, employed 36 replicates and 50,000 particles} 
-\label{tab:ovovrealdata} % For referencing this table elsewhere in your text
-\begin{tabular}{|c c c|} 
- \hline
-  & PAL & SMC  \\
-  \hline
- OvOv & \Sexpr{round(palfilter_lik_list_wwr$log_lik,2)} & $\Sexpr{round(logmeanexp(logLik(pfilter_wwr),2))}$ \\ 
- \hline
-\end{tabular}
-\end{table}
-
-% \begin{figure}[H]
-% \centering
-% \includegraphics[width=0.9\textwidth]{thesis-figs/cond_SMC_PAL_realdat.png}
-% \caption{\label{fig:cond_SMC_PAL_realdat}Conditional log-likelihoods computed using two methods for the real rotavirus dataset, with the SMC method replicated 36 times due to its high variances. The blue line represents overlapping results from 36 SMC computations, while the red line is derived from PAL. The main sources of likelihood shortfall of SMC are at time points $t=1, 2, 3, 11, 81, 194$, and $325-333$.}
-% \end{figure}
-
 Figure~2 indicates that the worst conditional log-likelihood values, estimated using the particle filter, arise at the start of the time series.
 This could be a problem with data collection, or some subtle issue with the science of the epidemiological system, but a simple possibility is that the initial values of the latent state process might be poorly specified.
 For this model, the initial values were fixed based on scientific reasoning, rather than being estimated.
 If we instead estimate the initial values, we obtain the results in Table~\ref{tab:mlebywwr}. 
 
 \begin{table}[htbp]
-  \centering
-  \begin{threeparttable}
-    \caption{Maximum likelihood estimation of parameters by PAL \citep{wwr}, and by mif2 algorithm \citep{pomppackagepaper} for the OvOv model.}
+    \caption{Maximum likelihood estimation of parameters by PAL \citep{wwr}, and by mif2 algorithm \citep{pomppackagepaper} for the OvOv model. The initial distribution parameter \(\lambda_0 = (S_{10}, I_{10}, R_{10}, S_{20}, I_{20}, R_{20}, S_{30}, I_{30}, R_{30})\) are assumed to be \textbf{fixed} in \cite{wwr}. The iterated filtering estimates were obtained by using 3 rounds of refinement, with 100 filtering iterations, 50,000 particles, and 36 replicates in each round with the top 12 best fits in terms of likelihood chosen to be the starting value for the next round.}
     \label{tab:mlebywwr}
+\begin{center}    
     \begin{tabular}{lcc}  % Left-aligned for the first column, centered for the other two columns
       \toprule
-      Parameter      & OvOv      & OvOv (\textbf{pomp})$^*$ \\
+      Parameter      & PAL      & iterated filtering \\
       \midrule
       \(\beta_1\)    & 11.48     & $\Sexpr{round(est_mle_vec["beta1"],2)}$\\
       \(\beta_2\)    & 0.25      & $\Sexpr{round(est_mle_vec["beta2"],2)}$\\
@@ -809,38 +785,43 @@ If we instead estimate the initial values, we obtain the results in Table~\ref{t
       \textbf{AIC}  & 13778.08  & $\Sexpr{round(2*((length(params_wwr) - length(params_fixed)) - est_mle_vec["logLik"]),2)}$\\
       \bottomrule
     \end{tabular}
-    \begin{tablenotes}
-      \small
-      \item[*] The initial distribution parameter \(\lambda_0 = (S_{10}, I_{10}, R_{10}, S_{20}, I_{20}, R_{20}, S_{30}, I_{30}, R_{30})\) are assumed to be \textbf{fixed} in \cite{wwr}. The results of the estimates of the OvOv (\textbf{pomp}) model are obtained by using the Iterated Filtering algorithm with 3 rounds and 100 iterations, 50,000 particles, and 36 replicates in each round with the top 12 best fits in terms of likelihood chosen to be the starting value for the next round. 
-    \end{tablenotes}
-  \end{threeparttable}
+\end{center}
 \end{table}
 
+\section*{Discussion}
 
-
-\ed{WE CAN REVIEW EXACTLY WHICH NUMBERS TO SHOW. IDEALLY, AS LITTLE AS POSSIBLE IN ORDER TO MAKE A STRONG ARGUMENT.}
-
-
+PAL provides an approximate filter, whereas the particle filter provides a Monte~Carlo estimate of an exact filter.
+Possible explanations for PAL obtaining a higher log-likelihood than a particle filter include:
+\begin{enumerate}
+\item The particle filter could have high Monte Carlo variance. This results in negative bias in its log-likilihood estimate due to Jensen's inequality, since the particle filter provides an unbiased likelihood estimate.
+\item If the model is misspecified, the approximation error in PAL could lead to a higher log-likelihood estimate than that of the actual misspecified model.
+\end{enumerate}
+Log-likelihood is a proper scoring rule for forecasts \cite{gneiting2}, and both the particle filter and PAL construct their log-likelihood estimates via a sequence of one-step forecasts.
+Therefore, if the model is correctly specified, the approximation error in PAL can only decrease the expected log-likelihood.
+We tested this on simulated data, for which the model of \cite{wwr} is correctly specified.
+We focus on the version of the model with overdispersion in both the population dynamics and the measurement process.
+This version of the model, called OvOv, was found by both \cite{wwr} and \cite{stocks} to be the best choice to fit the data.
+For this simulation study, the particle filter out-performs PAL (Figure~1) which supports hypothesis 2, above.
+Consequently, we looked for model misspecification by comparing the conditional log-likelihood estimates at each time point, as described in the Methods section.
 
 We conclude that PAL is a potentially useful algorithm, with some favorable theoretical properties.
 However, the corrected evidence does not indicate an advantage for using PAL in situations where the particle filter is effective.
 
-%%%%%%%%% 222222222 %%%%%%%%%%5
+%%%%%%%%% 222222222 %%%%%%%%%%
 
 \section*{Methods}
 
-\ed{BRIEFLY DESCRIBE HERE ANY DETAILS NEEDED TO DESCRIBE THE RESULTS. COMMENT ON CODE AVAILABILITY.}
-
-To evaluate whether SMC performs as well as PAL in terms of both computational time and likelihood identifiability, we replicated the model using the R package \textbf{pomp} \citep{pomppackagepaper}. First, we verified that the two models are essentially identical. Here, we simulated data from the two models 1000 times at the MLE shown in Table \ref{tab:mlebywwr} and compared the summary statistics of 1000 simulated time series from two models using the t-test. Summary statistics including the mean, median, and variance for all three age groups were tested. The results showed no significant differences between the two models from which the data were simulated, confirming that both the latent process model and the observation model are essentially consistent with each other, given that the observations were directly simulated. From Table \ref{tab:mlebywwr}, it is evident that the OvOv model, with overdispersion in both the dynamic system and the measurement model, yields the lowest AIC. We therefore focus on this version of the model.
+We first replicated the model of \citet{wwr} in the R package \textbf{pomp} \citep{pomppackagepaper}.
+Comparing summary statistics of simulations confirms that both model versions are essentially identical, as described by \citet{hao24}.
+We therefore implement PAL using the code from \citet{wwr}, comparing directly with the particle filter implemented using \textbf{pomp}.
 
 This article has focused on likelihood evaluation, but the inferences presented also require the likelihood estimate to be maximized.
-\cite{stocks} used iterated filtering to maximize the particle filter likelihood estimate, whereas \cite{wwr} used direct numerical maximization.
+\cite{wwr} used direct numerical maximization, whereas \cite{stocks} used iterated filtering to maximize the particle filter likelihood estimate implemented using the \texttt{mif2} algorithm in \textbf{pomp}.
 We follow the approaches adopted by these two papers.
 The optimization method is not directly pertinent to the comparison of the filtering methods, so we do not discuss optimization in further detail here.
-
-Our workflow is fully reproducible. An extended description of our reanalysis of \cite{wwr} is provided by \cite{hao24}.
+An extended description of our reanalysis of \cite{wwr} is provided by \cite{hao24}.
 That thesis also contains some additional results reinforcing the conclusions presented in this article.
-
+The source code for this article is available at \url{https://github.com:ionides/pal-vs-pf} and archived at \ed{ZENODO - TODO}.
 
 \bibliography{bib-pal}
 
