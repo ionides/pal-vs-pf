@@ -605,7 +605,7 @@ bake(file = paste0(out_dir, "pfilter/simulated_dataset/pfilter_ovov_sim_100.rds"
       .options.future = list(seed = 998468235L)
     ) %dofuture% {
       pfilter(
-        pfilter_obj[[i]], Np = NP_MIF, save.states = TRUE, params = params_wwr
+        pfilter_obj[[i]], Np = NP_MIF, save.states = FALSE, params = params_wwr
       )
     } -> pfs
     pfilter_ovov_sim_computation[i] <- logmeanexp(logLik(pfs))  
@@ -810,6 +810,9 @@ However, the corrected evidence does not indicate an advantage for using PAL in 
 %%%%%%%%% 222222222 %%%%%%%%%%
 
 \section*{Methods}
+
+\yize{ON AVERAGE PAL IS 25.3 LOG UNITS LOWER THAN PFILTER AND SHOULD WE MENTION THAT WE USED THE SIMULATED DATA WITHOUT ZEROS? \\ 
+THE TABLE SEEMS TO BE TALL AND THIN. SHOULD WE PUT IT IN A APPENDIX?}
 
 We first replicated the model of \citet{wwr} in the R package \textbf{pomp} \citep{pomppackagepaper}.
 Comparing summary statistics of simulations confirms that both model versions are essentially identical, as described by \citet{hao24}.

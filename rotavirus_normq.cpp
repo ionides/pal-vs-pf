@@ -322,7 +322,7 @@ List rotavirus_SMC_qropxi( arma::vec init_dist,
   
   Rcpp::NumericVector ll_storage_R = Rcpp::wrap(ll_storage);
   
-  List L = List::create(Named("log_lik") = log_lik, Named("xi_particles") = xiresamp_particles, Named("q_particles") = qresamp_particles, Named("ess") = ess, Named("ll_storage") = ll_storage_R);
+  List L = List::create(Named("log_lik") = log_lik, Named("ll_storage") = ll_storage_R);
  // List L = List::create(Named("log_lik") = log_lik, Named("xi_particles") = xiresamp_particles, Named("q_particles") = qresamp_particles);
   
   return(L);
