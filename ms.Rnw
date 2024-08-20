@@ -541,19 +541,6 @@ This re-analysis does, however, show a discrepancy between two methods.
 We continued our investigation to establish the cause of this.
 We discovered that WWR (unlike SBH) used a poorly fitting choice of initial conditions for the latent process in January 2001 (their time 0). 
 
-\begin{table}[ht] % The placement specifier can be [h!tbp]
-\centering % Centers the table
-\caption{log-likelihood at the MLE of OvOv model for the real rotavirus data, computed using two filtering methods, employed 36 replicates and 50,000 particles} 
-\label{tab:ovovrealdata} % For referencing this table elsewhere in your text
-\begin{tabular}{|c c c|} 
- \hline
-  & PAL & SMC  \\
-  \hline
- OvOv & \Sexpr{round(palfilter_lik_list_wwr$log_lik,2)} & $\Sexpr{round(logmeanexp(logLik(pfilter_wwr),2))}$ \\ 
- \hline
-\end{tabular}
-\end{table}
-
 <<sim-100, echo=F, warning=F, message=F>>=
 bake(file = paste0(out_dir, "pfilter/simulated_dataset/ovov_sim_100.rds"),{
   ovov_sim_computation <- list()
@@ -709,6 +696,18 @@ bake(file = paste0(out_dir,"pfilter/original_dataset/palfilter_lik_list_wwr.rds"
 }) -> palfilter_lik_list_wwr
 @
 
+\begin{table}[ht] % The placement specifier can be [h!tbp]
+\centering % Centers the table
+\caption{log-likelihood at the MLE of OvOv model for the real rotavirus data, computed using two filtering methods, employed 36 replicates and 50,000 particles} 
+\label{tab:ovovrealdata} % For referencing this table elsewhere in your text
+\begin{tabular}{|c c c|} 
+ \hline
+  & PAL & SMC  \\
+  \hline
+ OvOv & \Sexpr{round(palfilter_lik_list_wwr$log_lik,2)} & $\Sexpr{round(logmeanexp(logLik(pfilter_wwr),2))}$ \\ 
+ \hline
+\end{tabular}
+\end{table}
 
 <<plot2-cond-loglik, echo=FALSE, fig.height=4, fig.width=5.5, fig.cap='Conditional log-likelihoods computed using two methods for the real rotavirus dataset, with the SMC method replicated 36 times due to its high variances. The blue line represents overlapping results from 36 SMC computations, while the red line is derived from PAL. The main sources of likelihood shortfall of SMC are at time points $t=1, 2, 3, 11, 81, 194$, and $325-333$.'>>=
 
