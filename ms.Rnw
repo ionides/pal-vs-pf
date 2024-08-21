@@ -810,8 +810,7 @@ However, the corrected evidence does not indicate an advantage for using PAL in 
 
 \section*{Methods}
 
-\yize{ON AVERAGE PAL IS 25.3 LOG UNITS LOWER THAN PFILTER AND SHOULD WE MENTION THAT WE USED THE SIMULATED DATA WITHOUT ZEROS? \\ 
-THE TABLE SEEMS TO BE TALL AND THIN. SHOULD WE PUT IT IN A APPENDIX?}
+\yize{ON AVERAGE PAL IS 25.3 LOG UNITS LOWER THAN PFILTER AND SHOULD WE MENTION THAT WE USED THE SIMULATED DATA WITHOUT ZEROS?}
 
 We first replicated the model of \citet{wwr} in the R package \textbf{pomp} \citep{pomppackagepaper}.
 Comparing summary statistics of simulations confirms that both model versions are essentially identical, as described by \citet{hao24}.
