@@ -539,7 +539,7 @@ Since the method of SBH is applicable to a more general class of models, and sup
 The large discrepancy in log-likelihood disappears at this point by recomputing the likelihood of the model using PAL and particle filter separately (see Table~\ref{tab:ovovrealdata}).
 This re-analysis does, however, show a discrepancy between two methods.
 We continued our investigation to establish the cause of this.
-We discovered that WWR (unlike SBH) used a poorly fitting choice of initial conditions for the latent process in January 2001 (their time 0). 
+We discovered that the initial conditions for the latent process in January 2001 (their time 0) were estimated by SBH. However, in WWR, they were assumed fixed and made the model fitted poorly. 
 
 <<sim-100, echo=F, warning=F, message=F>>=
 bake(file = paste0(out_dir, "pfilter/simulated_dataset/ovov_sim_100.rds"),{
