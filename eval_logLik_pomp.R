@@ -1,4 +1,18 @@
-#pfilter for a list of mif2 results
+#' To evaluate likelhoods of a list of pomp objects using pfilter with replications. 
+#'
+#' @param model_obj_list List of pomp results.
+#' @param nreps Number of replications for each pfilter. 
+#' @param np_pf Number of particles in pfilter.
+#' @param seed  Set seed.
+#' 
+#' @return A matrix with ncores number of rows and estimated parameters being in each row.
+#' @export
+#'
+#' @source <https://github.com/AJAbkemeier/measlespkg/tree/main/R>
+#'
+#' @examples
+#' eval_logLik_pomp(model_obj_list, 36, 1000, 123)
+#' 
 eval_logLik_pomp = function(model_obj_list, nreps, np_pf, seed){
   pf_logLik_frame = data.frame(
     logLik = rep(0, length(model_obj_list)),
@@ -8,9 +22,7 @@ eval_logLik_pomp = function(model_obj_list, nreps, np_pf, seed){
   )
   
   for(i in seq_along(model_obj_list)){
-    registerDoFuture()
     plan(multicore, workers = nreps)
-    
     foreach::foreach(
       j = 1:nreps,
       .options.future=list(seed=seed),
