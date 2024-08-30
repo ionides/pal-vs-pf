@@ -949,15 +949,15 @@ ggplot(df, aes(x = time, y = cond_loglik, color = method)) +
       \(\rho\)       & 0.16      & $\Sexpr{round(est_mle_vec["beta11"],2)}$ & $\Sexpr{round(est_mle_vec_sbh["beta11"],2)}$\\
       \(\sigma^2_q\) & 0.021     & $\Sexpr{round(est_mle_vec["sigma_q"],3)}$ & $\Sexpr{round(est_mle_vec_sbh["sigma_q"],3)}$\\
       \(\sigma_\xi\) & 66.89     & $\Sexpr{round(est_mle_vec["sigma_xi"],2)}$ & $\Sexpr{round(est_mle_vec["sigma_xi"],2)}$\\
-      \(S_{10}\)     & 3876549   & $\Sexpr{round(pop*est_mle_vec["S10"],0)}$  & $\Sexpr{round(pop*est_mle_vec_sbh["S10"],0)}$\\
-      \(I_{10}\)     & 30351     & $\Sexpr{round(pop*est_mle_vec["I10"],0)}$  & $\Sexpr{round(pop*est_mle_vec_sbh["I10"],0)}$\\
-      \(R_{10}\)     & 1315221   & $\Sexpr{round(pop*est_mle_vec["R10"],0)}$  & $\Sexpr{round(pop*est_mle_vec_sbh["R10"],0)}$\\
-      \(S_{20}\)     & 57139612  & $\Sexpr{round(pop*est_mle_vec["S20"],0)}$  & $\Sexpr{round(pop*est_mle_vec_sbh["S20"],0)}$\\
-      \(I_{20}\)     & 871       & $\Sexpr{round(pop*est_mle_vec["I20"],0)}$  & $\Sexpr{round(pop*est_mle_vec_sbh["I20"],0)}$\\
-      \(R_{20}\)     & 302852    & $\Sexpr{round(pop*est_mle_vec["R20"],0)}$  & $\Sexpr{round(pop*est_mle_vec_sbh["R20"],0)}$\\
-      \(S_{30}\)     & 19573727  & $\Sexpr{round(pop*est_mle_vec["S30"],0)}$  & $\Sexpr{round(pop*est_mle_vec_sbh["S30"],0)}$\\
-      \(I_{30}\)     & 2550      & $\Sexpr{round(pop*est_mle_vec["I30"],0)}$  & $\Sexpr{round(pop*est_mle_vec_sbh["I30"],0)}$\\
-      \(R_{30}\)     & 131092    & $\Sexpr{round(pop*est_mle_vec["R30"],0)}$  & $\Sexpr{round(pop*est_mle_vec_sbh["R30"],0)}$\\
+      \(S_{10}\)     & 3876549   & $\Sexpr{round(pop*est_mle_vec["S10"],0)}$  & $5094840$\\
+      \(I_{10}\)     & 30351     & $\Sexpr{round(pop*est_mle_vec["I10"],0)}$  & $2871$\\
+      \(R_{10}\)     & 1315221   & $\Sexpr{round(pop*est_mle_vec["R10"],0)}$  & $124410$\\
+      \(S_{20}\)     & 57139612  & $\Sexpr{round(pop*est_mle_vec["S20"],0)}$  & $57385600$\\
+      \(I_{20}\)     & 871       & $\Sexpr{round(pop*est_mle_vec["I20"],0)}$  & $639$\\
+      \(R_{20}\)     & 302852    & $\Sexpr{round(pop*est_mle_vec["R20"],0)}$  & $57072$\\
+      \(S_{30}\)     & 19573727  & $\Sexpr{round(pop*est_mle_vec["S30"],0)}$  & $19697600$\\
+      \(I_{30}\)     & 2550      & $\Sexpr{round(pop*est_mle_vec["I30"],0)}$  & $174$\\
+      \(R_{30}\)     & 131092    & $\Sexpr{round(pop*est_mle_vec["R30"],0)}$  & $9578$\\
       \midrule
       \textbf{AIC}  & 13778.08  & $\Sexpr{round(2*((length(params_wwr) - length(params_fixed)) - est_mle_vec["logLik"]),2)}$ & $\Sexpr{round(2*((length(params_wwr) - length(params_fixed)) - est_mle_vec_sbh["logLik"]),2)}$\\
       \bottomrule
