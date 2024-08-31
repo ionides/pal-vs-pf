@@ -62,8 +62,8 @@ library("knitr")
 opts_knit$set(concordance=TRUE)
 opts_chunk$set(
   tidy = TRUE,
-  cache = TRUE,
-#  cache = FALSE,  # set cache = FALSE when editing the code
+# cache = TRUE,
+  cache = FALSE,  # set cache = FALSE when editing the code
 # message = FALSE,
 # warning = FALSE,
   tidy.opts = list(
@@ -107,7 +107,7 @@ sourceCpp('rotavirus_normq.cpp')
 source("choose_n_fits.R")
 source("eval_logLik_pomp.R")
 
-RUN_LEVEL = 2
+RUN_LEVEL = 1
 NP_MIF       = switch(RUN_LEVEL, 10,   5000,  50000)
 NMIF         = switch(RUN_LEVEL, 5,    20,    100)
 ncores       = switch(RUN_LEVEL, 4,    10,    36)
