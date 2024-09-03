@@ -107,7 +107,7 @@ sourceCpp('rotavirus_normq.cpp')
 source("choose_n_fits.R")
 source("eval_logLik_pomp.R")
 
-RUN_LEVEL = 3
+RUN_LEVEL = 1
 NP_MIF       = switch(RUN_LEVEL, 10,   5000,  50000)
 NMIF         = switch(RUN_LEVEL, 5,    20,    100)
 ncores       = switch(RUN_LEVEL, 4,    10,    36)
@@ -381,13 +381,6 @@ sir_full <- pomp(
   statenames = statenames,
   paramnames = names(params_full)
 )
-
-sir_sbh_init <- pomp(
-  sir_wwr,
-  t0 = 1-6*52,
-  rinit = rinit_stocks,
-  statenames = statenames
-) 
 @
 
 
@@ -527,6 +520,20 @@ est_mle_vec <- el_03[which.max(el_03$logLik),]
 
 <<maximization1-Stocks_rinit, echo=F, warning=F, message=F>>=
 set.seed(123)
+
+dat %>%
+  rbind(data.frame(time=0,cases1=NA,cases2=NA,cases3=NA)) %>%
+  arrange(time) -> dat_sbh
+
+sir_sbh_init <- pomp(
+  sir_wwr,
+  data = dat_sbh,
+  times = "time",
+  t0 = 1-6*52,
+  rinit = rinit_stocks,
+  statenames = statenames
+) 
+
 sir_box_sbh <- list(
   beta1 = c(10, 15),
   beta2 = c(0.2, 0.4),
@@ -572,7 +579,6 @@ bake(file = paste0(out_dir, "mif2_maximization/SBH_init/round_01/mifs_global_sbh
 bake(file = paste0(out_dir, "mif2_maximization/SBH_init/round_01/sbh_el_01.rds"),{
   eval_logLik_pomp(mifs_global_sbh_01, ncores, NP_MIF, 4248930)
 }) -> sbh_el_01
-
 @
 
 % Continue: Maximization Round 2 - Stocks rinit
