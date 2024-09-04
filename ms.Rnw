@@ -107,7 +107,7 @@ sourceCpp('rotavirus_normq.cpp')
 source("choose_n_fits.R")
 source("eval_logLik_pomp.R")
 
-RUN_LEVEL = 3
+RUN_LEVEL = 1
 NP_MIF       = switch(RUN_LEVEL, 10,   5000,  50000)
 NMIF         = switch(RUN_LEVEL, 5,    20,    100)
 ncores       = switch(RUN_LEVEL, 4,    10,    36)
@@ -127,10 +127,16 @@ out_dir <- paste0("output_0",RUN_LEVEL, "/")
 <<OvOv-model, echo=F, warning=F, message=F>>=
 # measurement model 
 dmeas <- Csnippet("
-  lik =  dbinom(cases1, H1, q1, 1) +
-  dbinom(cases2, H2, q2, 1) +
-  dbinom(cases3, H3, q3, 1);"
+  if(ISNA(cases1)) {
+    lik = (give_log) ? 0 : 1;
+  } else {
+      lik =  dbinom(cases1, H1, q1, 1) +
+      dbinom(cases2, H2, q2, 1) +
+      dbinom(cases3, H3, q3, 1);
+    }
+  lik = (give_log) ? lik : exp(lik);"
 )
+
 rmeas <-  Csnippet("
   cases1 = rbinom(H1, q1);
   cases2 = rbinom(H2, q2);
@@ -526,13 +532,19 @@ dat %>%
   arrange(time) -> dat_sbh
 
 sir_sbh_init <- pomp(
-  sir_wwr,
   data = dat_sbh,
   times = "time",
   t0 = 1-6*52,
+  dmeasure = dmeas,
+  rmeasure = rmeas,
+  rprocess = discrete_time(step.fun = rproc, delta.t = 1/4),
+  statenames = statenames,
+  paramnames = names(params_wwr),
+  accumvars = c("H1", "H2", "H3"),
   rinit = rinit_stocks,
-  statenames = statenames
-) 
+  partrans = pt_wwr,
+  params = params_wwr
+)
 
 sir_box_sbh <- list(
   beta1 = c(10, 15),
