@@ -649,9 +649,61 @@ bake(file = paste0(out_dir,"mif2_maximization/SBH_init/round_03/sbh_el_03.rds"),
 }) ->  sbh_el_03
 @
 
+<<maximization4-Stocks_rinit, echo=F, warning=F, message=F>>=
+set.seed(12345)
+sd_04 = (2/3)^3
+starting_values_sbh_04 <- choose_n_fits(sbh_el_03, top_n_fits, ncores)
+
+bake(file = paste0(out_dir, "mif2_maximization/SBH_init/round_04/mifs_global_sbh_04.rds"),{ 
+  plan(multicore, workers = ncores)
+  foreach(i = 1:ncores, .options.future = list(seed = 652643293)) %dofuture% {
+    pomp::mif2(
+      mifs_global_sbh_03[[1]],
+      rw.sd = rw_sd(
+        beta1 = 0.01*sd_04, beta2 = 0.01*sd_04, beta3 = 0.01*sd_04,
+        beta11 = 0.01*sd_04, phi = 0.01*sd_04,
+        sigma_q = 0.01*sd_04, sigma_xi = 0.01*sd_04
+      ),
+      params = starting_values_sbh_04[[i]]
+    ) 
+  }
+}) -> mifs_global_sbh_04
+
+
+bake(file = paste0(out_dir,"mif2_maximization/SBH_init/round_04/sbh_el_04.rds"),{
+  eval_logLik_pomp(mifs_global_sbh_04, ncores, NP_MIF, seed = 4248930)
+}) ->  sbh_el_04
+@
+
+<<maximization5-Stocks_rinit, echo=F, warning=F, message=F>>=
+set.seed(12345)
+sd_05 = (2/3)^4
+starting_values_sbh_05 <- choose_n_fits(sbh_el_04, top_n_fits, ncores)
+
+bake(file = paste0(out_dir, "mif2_maximization/SBH_init/round_05/mifs_global_sbh_05.rds"),{ 
+  plan(multicore, workers = ncores)
+  foreach(i = 1:ncores, .options.future = list(seed = 652643293)) %dofuture% {
+    pomp::mif2(
+      mifs_global_sbh_04[[1]],
+      rw.sd = rw_sd(
+        beta1 = 0.01*sd_05, beta2 = 0.01*sd_05, beta3 = 0.01*sd_05,
+        beta11 = 0.01*sd_05, phi = 0.01*sd_05,
+        sigma_q = 0.01*sd_05, sigma_xi = 0.01*sd_05
+      ),
+      params = starting_values_sbh_05[[i]]
+    ) 
+  }
+}) -> mifs_global_sbh_05
+
+
+bake(file = paste0(out_dir,"mif2_maximization/SBH_init/round_05/sbh_el_05.rds"),{
+  eval_logLik_pomp(mifs_global_sbh_05, ncores, NP_MIF, seed = 4248930)
+}) ->  sbh_el_05
+@
+
 <<estimated-mle_stocks_init, echo=FALSE, message=FALSE, warning=FALSE>>=
 # Can be changed if more rounds needed
-est_mle_vec_sbh <- sbh_el_03[which.max(sbh_el_03$logLik),]
+est_mle_vec_sbh <- sbh_el_05[which.max(sbh_el_05$logLik),]
 @
 
 
@@ -1007,6 +1059,7 @@ For this model, the initial values were fixed based on scientific reasoning, rat
 If we instead estimate the initial values, we obtain the results in Table~\ref{tab:mlebywwr}. 
 
 \ed{SINCE THE MEAN DURATION OF IMMUNITY IS 1 YR, HAVING $31\times 10^6$ in $R_{2,0}$ IMPLIES THAT ABOUT HALF OF ALL SUSCEPTIBLE INDIVIDUALS GET ROTAVIRUS EVERY YEAR ACCORDING TO THE MODEL. IS THAT THE CASE FOR THE MODEL? FOR THE DATA, THE PER-CAPITA RATE IN THIS AGE GROUP IS RATER LOW. THE SIMPLEST WAY TO AVOID THIS PROBLEM WOULD BE TO DO WHAT SBH DID (DESCRIBED IN THEIR ONLINE APPENDIX C) - EFFECTIVELY, DRAWING $X_0$ FROM THE STATIONARY DISTRIBUTION GIVEN THE MODEL. THIS HAS THE ADVANTAGE OF INCLUDING NO NEW PARAMETERS AND BEING CONSISTENT WITH SBH. WE DON'T KNOW IN ADVANCE EXACTLY HOW SUCCESSFUL IT WOULD BE...}
+\yize{ADD ANOTHER ROUND OF MIF WITH SBH INITIALIZATION \\ PLOT THE COND LIK AT NEW EST \\ MAXIMIZE/ FILTER WITH PAL ON THEIR MLE. I DOUBT THEIR RESULTS CAN BE EXACTLY REPRODUCED.}
 
 \section*{Discussion}
 
