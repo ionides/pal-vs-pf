@@ -699,9 +699,61 @@ bake(file = paste0(out_dir,"mif2_maximization/SBH_init/round_05/sbh_el_05.rds"),
 }) ->  sbh_el_05
 @
 
+<<maximization6-Stocks_rinit, echo=F, warning=F, message=F>>=
+set.seed(12345)
+sd_06 = (2/3)^5
+starting_values_sbh_06 <- choose_n_fits(sbh_el_05, top_n_fits, ncores)
+
+bake(file = paste0(out_dir, "mif2_maximization/SBH_init/round_06/mifs_global_sbh_06.rds"),{ 
+  plan(multicore, workers = ncores)
+  foreach(i = 1:ncores, .options.future = list(seed = 652643293)) %dofuture% {
+    pomp::mif2(
+      mifs_global_sbh_05[[1]],
+      rw.sd = rw_sd(
+        beta1 = 0.01*sd_06, beta2 = 0.01*sd_06, beta3 = 0.01*sd_06,
+        beta11 = 0.01*sd_06, phi = 0.01*sd_06,
+        sigma_q = 0.01*sd_06, sigma_xi = 0.01*sd_06
+      ),
+      params = starting_values_sbh_06[[i]]
+    ) 
+  }
+}) -> mifs_global_sbh_06
+
+
+bake(file = paste0(out_dir,"mif2_maximization/SBH_init/round_06/sbh_el_06.rds"),{
+  eval_logLik_pomp(mifs_global_sbh_06, ncores, NP_MIF, seed = 4248930)
+}) ->  sbh_el_06
+@
+
+<<maximization7-Stocks_rinit, echo=F, warning=F, message=F>>=
+set.seed(12345)
+sd_07 = (2/3)^6
+starting_values_sbh_07 <- choose_n_fits(sbh_el_06, top_n_fits, ncores)
+
+bake(file = paste0(out_dir, "mif2_maximization/SBH_init/round_07/mifs_global_sbh_07.rds"),{ 
+  plan(multicore, workers = ncores)
+  foreach(i = 1:ncores, .options.future = list(seed = 652643293)) %dofuture% {
+    pomp::mif2(
+      mifs_global_sbh_06[[1]],
+      rw.sd = rw_sd(
+        beta1 = 0.01*sd_07, beta2 = 0.01*sd_07, beta3 = 0.01*sd_07,
+        beta11 = 0.01*sd_07, phi = 0.01*sd_07,
+        sigma_q = 0.01*sd_07, sigma_xi = 0.01*sd_07
+      ),
+      params = starting_values_sbh_07[[i]]
+    ) 
+  }
+}) -> mifs_global_sbh_07
+
+
+bake(file = paste0(out_dir,"mif2_maximization/SBH_init/round_07/sbh_el_07.rds"),{
+  eval_logLik_pomp(mifs_global_sbh_07, ncores, NP_MIF, seed = 4248930)
+}) ->  sbh_el_07
+@
+
 <<estimated-mle_stocks_init, echo=FALSE, message=FALSE, warning=FALSE>>=
 # Can be changed if more rounds needed
-est_mle_vec_sbh <- sbh_el_05[which.max(sbh_el_05$logLik),]
+est_mle_vec_sbh <- sbh_el_07[which.max(sbh_el_07$logLik),]
 @
 
 
@@ -1124,6 +1176,39 @@ ggplot(df, aes(x = time, y = cond_loglik, color = method)) +
   ) +
   theme(legend.position = "bottom")
 @
+
+
+\begin{table}[htbp]
+    \caption{Maximum likelihood estimation of parameters for the OvOv model of WWR by PAL (taken from WWR), and by iterated particle filtering implemented using {\rm \texttt{mif2}} in {\rm \texttt{pomp}} \citep{pomppackagepaper}. The initial distribution parameter \(\lambda_0 = (S_{10}, I_{10}, R_{10}, S_{20}, I_{20}, R_{20}, S_{30}, I_{30}, R_{30})\) are assumed to be fixed in \cite{wwr}. The iterated particle filtering estimates were obtained by using 3 rounds of refinement, with 100 filtering iterations, 50,000 particles, and 36 replicates in each round with the top 12 best fits in terms of likelihood chosen to be the starting value for the next round.}
+    \label{tab:mlebywwr}
+\begin{center}    
+    \begin{tabular}{lccc}  % Left-aligned for the first column, centered for the other two columns
+      \toprule
+      Parameter      & PAL      & iterated filtering & iterated filtering (stocks)\\
+      \midrule
+      \(\beta_1\)    & 11.48     & $\Sexpr{round(est_mle_vec["beta1"],2)}$ & $\Sexpr{round(est_mle_vec_sbh["beta1"],2)}$\\
+      \(\beta_2\)    & 0.25      & $\Sexpr{round(est_mle_vec["beta2"],2)}$ & $\Sexpr{round(est_mle_vec_sbh["beta2"],2)}$\\
+      \(\beta_3\)    & 0.35      & $\Sexpr{round(est_mle_vec["beta3"],2)}$ & $\Sexpr{round(est_mle_vec_sbh["beta3"],2)}$\\
+      \(\phi\)       & 0.14      & $\Sexpr{round(est_mle_vec["phi"],2)}$   & $\Sexpr{round(est_mle_vec_sbh["phi"],2)}$\\
+      \(\rho\)       & 0.16      & $\Sexpr{round(est_mle_vec["beta11"],2)}$ & $\Sexpr{round(est_mle_vec_sbh["beta11"],2)}$\\
+      \(\sigma^2_q\) & 0.021     & $\Sexpr{round(est_mle_vec["sigma_q"],3)}$ & $\Sexpr{round(est_mle_vec_sbh["sigma_q"],3)}$\\
+      \(\sigma_\xi\) & 66.89     & $\Sexpr{round(est_mle_vec["sigma_xi"],2)}$ & $\Sexpr{round(est_mle_vec_sbh["sigma_xi"],2)}$\\
+      \(S_{10}\)     & 3876549   & $\Sexpr{round(pop*est_mle_vec["S10"],0)}$  & $5094840$\\
+      \(I_{10}\)     & 30351     & $\Sexpr{round(pop*est_mle_vec["I10"],0)}$  & $2871$\\
+      \(R_{10}\)     & 1315221   & $\Sexpr{round(pop*est_mle_vec["R10"],0)}$  & $124410$\\
+      \(S_{20}\)     & 57139612  & $\Sexpr{round(pop*est_mle_vec["S20"],0)}$  & $57385600$\\
+      \(I_{20}\)     & 871       & $\Sexpr{round(pop*est_mle_vec["I20"],0)}$  & $639$\\
+      \(R_{20}\)     & 302852    & $\Sexpr{round(pop*est_mle_vec["R20"],0)}$  & $57072$\\
+      \(S_{30}\)     & 19573727  & $\Sexpr{round(pop*est_mle_vec["S30"],0)}$  & $19697600$\\
+      \(I_{30}\)     & 2550      & $\Sexpr{round(pop*est_mle_vec["I30"],0)}$  & $174$\\
+      \(R_{30}\)     & 131092    & $\Sexpr{round(pop*est_mle_vec["R30"],0)}$  & $9578$\\
+      \midrule
+      \textbf{AIC}  & 13778.08  & $\Sexpr{round(2*((length(params_wwr) - length(params_fixed)) - est_mle_vec["logLik"]),2)}$ & $\Sexpr{round(2*((length(params_wwr) - length(params_fixed)) - est_mle_vec_sbh["logLik"]),2)}$\\
+      \bottomrule
+    \end{tabular}
+\end{center}
+\end{table}
+
 
 
 Figure~\ref{fig:plot2-cond-loglik} indicates that the worst conditional log-likelihood values, estimated using the particle filter, arise at the start of the time series.
