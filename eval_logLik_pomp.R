@@ -2,16 +2,16 @@
 #'
 #' @param model_obj_list List of pomp results.
 #' @param nreps Number of replications for each pfilter. 
-#' @param np_pf Number of particles in pfilter.
+#' @param np_pf Number of particles in the pfilter.
 #' @param seed  Set seed.
 #' 
-#' @return A matrix with ncores number of rows and estimated parameters being in each row.
+#' @return A matrix with ncores rows and estimated parameter vector in each row.
 #' @export
 #'
 #' @source <https://github.com/AJAbkemeier/measlespkg/tree/main/R>
 #'
 #' @examples
-#' eval_logLik_pomp(model_obj_list, 36, 1000, 123)
+#' eval_logLik_pomp(model_obj_list, nreps=36, np_pf=1000, seed=123)
 #' 
 eval_logLik_pomp = function(model_obj_list, nreps, np_pf, seed){
   pf_logLik_frame = data.frame(
