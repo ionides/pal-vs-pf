@@ -972,18 +972,14 @@ bake(file = paste0(out_dir,"pfilter/original_dataset/palfilter_mif2_mle.rds"),{
 @
 
 <<benchmark,echo=FALSE>>=
-arma_benchmark <- function(x,order=c(2,0,1)){
-  arima(log(x + 1), order = order)$loglik - sum(log(x+1))
-}
+set.seed(123)
 
-sum(apply(realdat,2, function(x)  arima(log(x + 1), order =c(2,0,1))$aic + 2 * sum(log(x+1))))
-
-sbh_data <- read.csv("sbh_data.txt",sep=" ",skip=3)[,-1]
+sbh_data <- read.csv("sbh_data.txt",sep=" ")[,-c(1)]
 sbh_benchmark <- sum(apply(sbh_data,2, function(x)
   arima(log(x + 1), order =c(2,0,1))$aic + 2 * sum(log(x+1))
 ))
 
-wwr_benchmark <- sum(apply(realdat,2, function(x)
+wwr_benchmark <- sum(apply(dat[,-1],2, function(x)
   arima(log(x + 1), order =c(2,0,1))$aic + 2 * sum(log(x+1))
 ))
 
@@ -1010,7 +1006,7 @@ tab_signif <- 0
     \Sexpr{myround(-2*logmeanexp(logLik(pfilter_wwr)+ 2*7),tab_signif)}
   \\
   5. & PF & Changing initial values &
-     \Sexpr{myround(2*((length(params_wwr) - length(params_fixed)) - est_mle_vec["logLik"]),tab_signif)}
+     \Sexpr{myround(2*((length(params_wwr) - length(params_fixed)) - est_mle_vec_sbh["logLik"]),tab_signif)}
   \\
   6. & PAL & Data, model and parameters matching 5.  &
      \Sexpr{myround(-2*palfilter_mif2_mle$log_lik + 2*7 ,tab_signif)}
