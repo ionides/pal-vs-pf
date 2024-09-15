@@ -1044,7 +1044,7 @@ Further, at the MLE obtained by maximizing PF, we found that PF beats PAL (compa
 WWR compared their fitted models with a log-ARMA(2,1) benchmark AIC value of 23043 (line 7).
 From this high AIC value, they inferred that all the mechanistic models possessing overdispersion have better statistical fit than a simple loglinear time series model.
 However, this AIC value corresponds to SBH's data, not the data fitted by WWR.
-Thus, line 7 can properly be compared only to line 1 but not to any other line of  Table~\ref{tab:ovovrealdata}. 
+Thus, line 7 can be properly compared only to line 1 but not to any other line of  Table~\ref{tab:ovovrealdata}. 
 We independently fitted a log-ARMA(2,1) model to the SBH data and obtained a similar AIC value (\Sexpr{myround(sbh_benchmark,tab_signif)}).
 Carrying out the same computation for the data fitted by WWR gives a log-ARMA benchmark AIC value of \Sexpr{myround(wwr_benchmark,tab_signif)} (line 8).
 Thus, the statistical fit of the mechanistic model considered by WWR is inferior to a simple log-ARMA model.
