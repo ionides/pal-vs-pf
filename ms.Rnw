@@ -724,32 +724,6 @@ bake(file = paste0(out_dir,"mif2_maximization/SBH_init/round_06/sbh_el_06.rds"),
 }) ->  sbh_el_06
 @
 
-<<maximization7-Stocks_rinit, echo=F, warning=F, message=F>>=
-set.seed(12345)
-sd_07 = (2/3)^6
-starting_values_sbh_07 <- choose_n_fits(sbh_el_06, top_n_fits, ncores)
-
-bake(file = paste0(out_dir, "mif2_maximization/SBH_init/round_07/mifs_global_sbh_07.rds"),{ 
-  plan(multicore, workers = ncores)
-  foreach(i = 1:ncores, .options.future = list(seed = 652643293)) %dofuture% {
-    pomp::mif2(
-      mifs_global_sbh_06[[1]],
-      rw.sd = rw_sd(
-        beta1 = 0.01*sd_07, beta2 = 0.01*sd_07, beta3 = 0.01*sd_07,
-        beta11 = 0.01*sd_07, phi = 0.01*sd_07,
-        sigma_q = 0.01*sd_07, sigma_xi = 0.01*sd_07
-      ),
-      params = starting_values_sbh_07[[i]]
-    ) 
-  }
-}) -> mifs_global_sbh_07
-
-
-bake(file = paste0(out_dir,"mif2_maximization/SBH_init/round_07/sbh_el_07.rds"),{
-  eval_logLik_pomp(mifs_global_sbh_07, ncores, NP_MIF, seed = 4248930)
-}) ->  sbh_el_07
-@
-
 <<estimated-mle_stocks_init, echo=FALSE, message=FALSE, warning=FALSE>>=
 # Can be changed if more rounds needed
 est_mle_vec_sbh <- sbh_el_06[which.max(sbh_el_06$logLik),]
@@ -1165,6 +1139,32 @@ The optimization method is not directly pertinent to the comparison of the filte
     \end{tabular}
 \end{center}
 \end{table}
+
+<<maximization7-Stocks_rinit, include=FALSE>>=
+set.seed(12345)
+sd_07 = (2/3)^6
+starting_values_sbh_07 <- choose_n_fits(sbh_el_06, top_n_fits, ncores)
+
+bake(file = paste0(out_dir, "mif2_maximization/SBH_init/round_07/mifs_global_sbh_07.rds"),{ 
+  plan(multicore, workers = ncores)
+  foreach(i = 1:ncores, .options.future = list(seed = 652643293)) %dofuture% {
+    pomp::mif2(
+      mifs_global_sbh_06[[1]],
+      rw.sd = rw_sd(
+        beta1 = 0.01*sd_07, beta2 = 0.01*sd_07, beta3 = 0.01*sd_07,
+        beta11 = 0.01*sd_07, phi = 0.01*sd_07,
+        sigma_q = 0.01*sd_07, sigma_xi = 0.01*sd_07
+      ),
+      params = starting_values_sbh_07[[i]]
+    ) 
+  }
+}) -> mifs_global_sbh_07
+
+
+bake(file = paste0(out_dir,"mif2_maximization/SBH_init/round_07/sbh_el_07.rds"),{
+  eval_logLik_pomp(mifs_global_sbh_07, ncores, NP_MIF, seed = 4248930)
+}) ->  sbh_el_07
+@
 
 <<PAL-MLE-from-mif2, echo=FALSE, message=FALSE, warning=FALSE>>=
 prop <- 420
