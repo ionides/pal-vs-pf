@@ -4,7 +4,6 @@
 \usepackage{booktabs} % For better-quality horizontal lines
 \usepackage{multirow}
 \usepackage{makecell}
-% \usepackage{threeparttable} % For table notes
 \usepackage{array} % For table formatting
 \usepackage{subcaption}
 \usepackage{setspace} % For double-line spacing
@@ -105,7 +104,7 @@ sourceCpp('rotavirus_normq.cpp')
 source("choose_n_fits.R")
 source("eval_logLik_pomp.R")
 
-RUN_LEVEL = 1
+RUN_LEVEL = 3
 NP_MIF       = switch(RUN_LEVEL, 10,   5000,  50000)
 NMIF         = switch(RUN_LEVEL, 5,    20,    100)
 ncores       = switch(RUN_LEVEL, 4,    10,    36)
@@ -753,7 +752,7 @@ bake(file = paste0(out_dir,"mif2_maximization/SBH_init/round_07/sbh_el_07.rds"),
 
 <<estimated-mle_stocks_init, echo=FALSE, message=FALSE, warning=FALSE>>=
 # Can be changed if more rounds needed
-est_mle_vec_sbh <- sbh_el_07[which.max(sbh_el_07$logLik),]
+est_mle_vec_sbh <- sbh_el_06[which.max(sbh_el_06$logLik),]
 @
 
 
@@ -973,18 +972,14 @@ bake(file = paste0(out_dir,"pfilter/original_dataset/palfilter_mif2_mle.rds"),{
 @
 
 <<benchmark,echo=FALSE>>=
-arma_benchmark <- function(x,order=c(2,0,1)){
-  arima(log(x + 1), order = order)$loglik - sum(log(x+1))
-}
+set.seed(123)
 
-sum(apply(realdat,2, function(x)  arima(log(x + 1), order =c(2,0,1))$aic + 2 * sum(log(x+1))))
-
-sbh_data <- read.csv("sbh_data.txt",sep=" ",skip=3)[,-1]
+sbh_data <- read.csv("sbh_data.txt",sep=" ",skip=3)[,-c(1)]
 sbh_benchmark <- sum(apply(sbh_data,2, function(x)
   arima(log(x + 1), order =c(2,0,1))$aic + 2 * sum(log(x+1))
 ))
 
-wwr_benchmark <- sum(apply(realdat,2, function(x)
+wwr_benchmark <- sum(apply(dat[,-1],2, function(x)
   arima(log(x + 1), order =c(2,0,1))$aic + 2 * sum(log(x+1))
 ))
 
@@ -1008,10 +1003,10 @@ tab_signif <- 0
     \Sexpr{myround(-2*palfilter_lik_list_wwr$log_lik + 2*7 ,tab_signif)} 
   \\
   4. & PF & Data, model and parameters matching 3. &
-    \Sexpr{myround(-2*logmeanexp(logLik(pfilter_wwr)+ 2*7),tab_signif)}
+    \Sexpr{myround(-2*logmeanexp(logLik(pfilter_wwr)) + 2*7,tab_signif)}
   \\
-  5. & PF & Changing initial values &
-     \Sexpr{myround(2*((length(params_wwr) - length(params_fixed)) - est_mle_vec["logLik"]),tab_signif)}
+  5. & PF & Using the initial values of SBH &
+     \Sexpr{myround(-2*est_mle_vec_sbh["logLik"] + 2*7,tab_signif)}
   \\
   6. & PAL & Data, model and parameters matching 5.  &
      \Sexpr{myround(-2*palfilter_mif2_mle$log_lik + 2*7 ,tab_signif)}
