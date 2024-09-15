@@ -757,7 +757,6 @@ est_mle_vec_sbh <- sbh_el_06[which.max(sbh_el_06$logLik),]
 @
 
 
-
 %%%%%%%%%% 11111111 %%%%%%%%%%%%
 
 \section{Introduction}
@@ -924,35 +923,70 @@ bake(file = paste0(out_dir,"pfilter/original_dataset/palfilter_lik_list_wwr.rds"
 }) -> palfilter_lik_list_wwr
 @
 
-<<PAL-MLE-from-mif2, echo=FALSE, message=FALSE, warning=FALSE>>=
-prop <- 420
-realdat <- as.matrix(dat[,-1])
-init_dist_mif2_mle <- c(
-  pop*as.numeric(est_mle_vec["S10"]), 
-  pop*as.numeric(est_mle_vec["I10"]), 
-  pop*as.numeric(est_mle_vec["R10"]),
-  pop*as.numeric(est_mle_vec["S20"]),
-  pop*as.numeric(est_mle_vec["R20"]),
-  pop*as.numeric(est_mle_vec["I20"]),
-  pop*as.numeric(est_mle_vec["S30"]),
-  pop*as.numeric(est_mle_vec["R30"]),
-  pop*as.numeric(est_mle_vec["I30"])
+<<simulate-initial-for-palfilter>>=
+n_sim <- 1000
+
+sim_sbh_init_for_pal <- simulate(
+  sir_sbh_init,
+  nsim=n_sim,
+  params=est_mle_vec_sbh,
+  seed = 123456
 )
 
+s1_t1_vec <- c()
+i1_t1_vec <- c()
+r1_t1_vec <- c()
+s2_t1_vec <- c()
+i2_t1_vec <- c()
+r2_t1_vec <- c()
+s3_t1_vec <- c()
+i3_t1_vec <- c()
+r3_t1_vec <- c()
+
+for(i in 1:n_sim){
+  s1_t1_vec[i] <- sim_sbh_init_for_pal[[i]]@states["S1",2]
+  i1_t1_vec[i] <- sim_sbh_init_for_pal[[i]]@states["I1",2]
+  r1_t1_vec[i] <- sim_sbh_init_for_pal[[i]]@states["R1",2]
+  
+  s2_t1_vec[i] <- sim_sbh_init_for_pal[[i]]@states["S2",2]
+  i2_t1_vec[i] <- sim_sbh_init_for_pal[[i]]@states["I2",2]
+  r2_t1_vec[i] <- sim_sbh_init_for_pal[[i]]@states["R2",2]
+  
+  s3_t1_vec[i] <- sim_sbh_init_for_pal[[i]]@states["S3",2]
+  i3_t1_vec[i] <- sim_sbh_init_for_pal[[i]]@states["I3",2]
+  r3_t1_vec[i] <- sim_sbh_init_for_pal[[i]]@states["R3",2]
+}
+
+init_dist_sbh_mle <- c(
+  S1=round(mean(s1_t1_vec),0),
+  I1=round(mean(i1_t1_vec),0),
+  R1=round(mean(r1_t1_vec),0),
+  S2=round(mean(s2_t1_vec),0),
+  I2=round(mean(i2_t1_vec),0),
+  R2=round(mean(r2_t1_vec),0),
+  S3=round(mean(s3_t1_vec),0),
+  I3=round(mean(i3_t1_vec),0),
+  R3=round(mean(r3_t1_vec),0)
+)
+@
+
+<<palfilter-at-mle_sbh, echo=FALSE, message=FALSE, warning=FALSE>>=
+prop <- 420
+
 initial_guess_mif2_mle <- c(
-  as.numeric(est_mle_vec["beta1"]), 
-  as.numeric(est_mle_vec["beta2"]), 
-  as.numeric(est_mle_vec["beta3"]),
-  as.numeric(est_mle_vec["phi"]),
-  as.numeric(est_mle_vec["beta11"]),
-  as.numeric(est_mle_vec["sigma_q"]),
-  as.numeric(est_mle_vec["sigma_xi"])
+  as.numeric(est_mle_vec_sbh["beta1"]), 
+  as.numeric(est_mle_vec_sbh["beta2"]), 
+  as.numeric(est_mle_vec_sbh["beta3"]),
+  as.numeric(est_mle_vec_sbh["phi"]),
+  as.numeric(est_mle_vec_sbh["beta11"]),
+  as.numeric(est_mle_vec_sbh["sigma_q"]),
+  as.numeric(est_mle_vec_sbh["sigma_xi"])
 )
 
 bake(file = paste0(out_dir,"pfilter/original_dataset/palfilter_mif2_mle.rds"),{
  set.seed(1223)
  rotavirus_SMC_qropxi(
-    init_dist = init_dist_mif2_mle, 
+    init_dist = init_dist_sbh_mle, 
     y_obs = realdat, 
     m = 9, 
     regular_params = c(
@@ -979,7 +1013,7 @@ sbh_benchmark <- sum(apply(sbh_data,2, function(x)
   arima(log(x + 1), order =c(2,0,1))$aic + 2 * sum(log(x+1))
 ))
 
-wwr_benchmark <- sum(apply(dat[,-1],2, function(x)
+wwr_benchmark <- sum(apply(realdat,2, function(x)
   arima(log(x + 1), order =c(2,0,1))$aic + 2 * sum(log(x+1))
 ))
 
@@ -1132,6 +1166,52 @@ The optimization method is not directly pertinent to the comparison of the filte
 \end{center}
 \end{table}
 
+<<PAL-MLE-from-mif2, echo=FALSE, message=FALSE, warning=FALSE>>=
+prop <- 420
+realdat <- as.matrix(dat[,-1])
+init_dist_mif2_mle <- c(
+  pop*as.numeric(est_mle_vec["S10"]), 
+  pop*as.numeric(est_mle_vec["I10"]), 
+  pop*as.numeric(est_mle_vec["R10"]),
+  pop*as.numeric(est_mle_vec["S20"]),
+  pop*as.numeric(est_mle_vec["R20"]),
+  pop*as.numeric(est_mle_vec["I20"]),
+  pop*as.numeric(est_mle_vec["S30"]),
+  pop*as.numeric(est_mle_vec["R30"]),
+  pop*as.numeric(est_mle_vec["I30"])
+)
+
+initial_guess_mif2_mle <- c(
+  as.numeric(est_mle_vec["beta1"]), 
+  as.numeric(est_mle_vec["beta2"]), 
+  as.numeric(est_mle_vec["beta3"]),
+  as.numeric(est_mle_vec["phi"]),
+  as.numeric(est_mle_vec["beta11"]),
+  as.numeric(est_mle_vec["sigma_q"]),
+  as.numeric(est_mle_vec["sigma_xi"])
+)
+
+bake(file = paste0(out_dir,"pfilter/original_dataset/palfilter_mif2_mle.rds"),{
+ set.seed(1223)
+ rotavirus_SMC_qropxi(
+    init_dist = init_dist_mif2_mle, 
+    y_obs = realdat, 
+    m = 9, 
+    regular_params = c(
+      initial_guess_mif2_mle[1], 
+      initial_guess_mif2_mle[2], 
+      initial_guess_mif2_mle[3], 
+      initial_guess_mif2_mle[4],
+      initial_guess_mif2_mle[5]
+    ), 
+    gamma_par = c(initial_guess_mif2_mle[7], 1/initial_guess_mif2_mle[7]), 
+    norm_par = c(0.07, initial_guess_mif2_mle[6]), 
+    prop = t(prop), 
+    n_particles = NP_MIF, 
+    ncores = ncores
+  ) 
+}) -> palfilter_mif2_mle
+@
 
 <<plot2-cond-loglik, echo=FALSE, fig.height=4, fig.width=5.5, out.width="4.5in",fig.align="center", fig.cap='Conditional log-likelihoods computed using PAL (red) and PF (blue) for the rotavirus model and MLE from WWR. We used 50000 particle for both PF and PAL. PF averaged over 36 replications to reduce the Monte Carlo variance, but this step was not necessary for PAL. The main sources of likelihood shortfall of PF are at time points $t=1, 2, 3, 11, 81, 194$, and $325-333$.'>>=
 
