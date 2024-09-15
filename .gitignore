@@ -9,6 +9,7 @@
 *.blg
 ms.tex
 output_01
+output_03/mif2_maximization/SBH_init/round_07
 ms-concordace.tex
 *~
 cache/*
