@@ -8,6 +8,7 @@
 *.Rhistory
 *.blg
 ms.tex
+output_01
 ms-concordace.tex
 *~
 cache/*
