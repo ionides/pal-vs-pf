@@ -1,12 +1,12 @@
 \documentclass[10pt]{article}
 \usepackage{color}
-\usepackage{graphicx} % Required for inserting
-\usepackage{booktabs} % For better-quality horizontal lines
+\usepackage{graphicx} 
+\usepackage{booktabs} 
 \usepackage{multirow}
 \usepackage{makecell}
-\usepackage{array} % For table formatting
+\usepackage{array} 
 \usepackage{subcaption}
-\usepackage{setspace} % For double-line spacing
+\usepackage{setspace} 
 \usepackage{float} 
 \usepackage{tabularx}
 \usepackage[round]{natbib}
@@ -18,17 +18,6 @@
 \usepackage{amsfonts,amssymb,amsthm}
 \usepackage{url}
 \usepackage[colorlinks=true,citecolor=blue]{hyperref}
-% Using \doublespacing in the preamble 
-% changes the text to double-line spacing
-% \doublespacing
-
-% Set page size and margins
-% Replace `letterpaper' with `a4paper' for UK/EU standard size
-\usepackage[a4paper,top=2cm,bottom=2cm,left=3cm,right=3cm,marginparwidth=1.75cm]{geometry}
-
-\newcommand{\ed}[1]{\textcolor{red}{[EI: #1]}}
-\newcommand{\yize}[1]{\textcolor{green}{[YH: #1]}}
-\newcommand{\aaron}[1]{\textcolor{blue}{[AA: #1]}}
 
 \bibliographystyle{apalike}
 
@@ -44,16 +33,13 @@ Filtering algorithms are fundamental for inference on partially observed stochas
 A novel Poisson approximate likelihood (PAL) filter was introduced by \cite{wwr}.
 PAL employs a Poisson approximation to conditional densities, offering a fast approximation to the likelihood function for a certain subset of partially observed Markov process models.
 A central piece of evidence for PAL is the comparison in Table~1 of \cite{wwr}, which claims a large improvement for PAL over a standard particle filter algorithm.
-This evidence, based on a model and data from a previous scientific study by \citet{stocks}, might suggests that researchers confronted with similar models should use PAL rather than previous particle filter methods.
-Alternatively, the improvement in likelihood found by \cite{wwr} compared to \cite{stocks} might indicate a flaw in the model or numerical methods for that previous work.
-We show that the comparison of log-likelihood values made by \cite{wwr} is flawed because the PAL calculations were carried out using a dataset scaled differently from the previous study.
+This evidence, based on a model and data from a previous scientific study by \citet{stocks}, might suggests that researchers confronted with similar models should use PAL rather than particle filter methods.
+Taken at face value, this evidence also reduces the credibility of \cite{stocks} by indicating a shortcoming with the numerical methods that they used.
+However, we show that the comparison of log-likelihood values made by \cite{wwr} is flawed because their PAL calculations were carried out using a dataset scaled differently from the previous study.
 If PAL and the particle filter are applied to the same data, the advantage claimed for PAL disappears.
 On simulations where the model is correctly specified, the particle filter outperforms PAL.
 
 \end{abstract}
-
-
-% R starts here
 
 <<setup,echo=FALSE,message=FALSE,warning=FALSE>>=
 rm(list = ls())     # clear objects
@@ -295,9 +281,6 @@ rinit_stocks <- Csnippet("
   H3 = 0;
 ")
 
-# x <- c(3876549,57139612,19573727,30351,871,2550,1315221,302852,131092)
-# x/sum(x)
-
 # define parameters (fixed)
 params_fixed <- c(
   gamma = 1, 
@@ -351,7 +334,7 @@ pt_wwr <- pomp::parameter_trans(
 )
 
 
-dat <- read.table("real_rotavirus_metadata.txt") |>
+dat <- read.table("unscaled_rotavirus_data.txt") |>
   arrange(time)
 
 statenames <- c(
@@ -737,11 +720,12 @@ est_mle_vec_sbh <- sbh_el_06[which.max(sbh_el_06$logLik),]
 This article results from an investigation of the results presented by \citet{wwr} (henceforth, WWR) in their Table~1.
 WWR were given the opportunity to submit a correction, after we shared the results of our investigation with them, but they declined.
 The theory developed by WWR shows that their Poisson Approximate Likelihood (PAL) method has some potentially useful scaling properties.
-This theory is supported by numerical results, in their Table~1, which erroneously claim to show that PAL has substantially stronger performance than a particle filter (PF) on an example of scientific interest but moderate size.
+This theory is supported by numerical results, in their Table~1, which erroneously claim to show that PAL has substantially stronger performance than a particle filter (PF) on an example of scientific interest.
 We present corrected results so that researchers considering whether to implement PAL are appropriately informed about its benefits.
 
-Table~1 of WWR reanalyzes the model and data of \citet{stocks} (henceforth, SBH) for which the likelihood was calculated using PF.
-SBH found clear evidence for the importance of overdispersion in a stochastic dynamic model for their epidemiological data.
+Table~1 of WWR uses a model and data adapted from \citet{stocks} (henceforth, SBH).
+SBH used PF to calculate the likelihood for a stochastic dynamic model of rotavirus transmission.
+SBH found clear evidence for the importance of including overdispersion in the model for their epidemiological data.
 This is significant because most earlier research on population dynamics avoided consideration of overdispersion, perhaps due to the lack of available statistical methodology for fitting overdispersed nonlinear stochastic dynamic models. 
 The conclusions of SBH hinge on a comparison of likelihoods, and so the results of WWR discredit those conclusions by indicating that SBH based their reasoning on inaccurately computed likelihoods.
 An important consequence of correcting Table~1 of WWR is that the results of SBH stand undiminished. 
@@ -752,7 +736,7 @@ The second, EqOv, includes overdispersion in only the measurement model.
 The third, OvOv, includes overdispersion in both these model components.
 We focus on OvOv, which WWR and SBH both found to be the best fitting model. 
 
-We show that most of the apparent advantage for PAL over PF, on the OvOv model, arises because WWR used a different scaling of the data from SBH.
+We show that the claimed advantage for PAL over PF, on the OvOv model, arose because WWR used a different scaling of the data from SBH.
 Two models for the same data can properly be compared by their likelihood, even if the models have entirely different structures.
 Allowance for the number of estimated parameters can be made using a quantity such as Akaike's information criterion \citep{Akaike1974ANL}.
 However, if data are rescaled, an adjustment is required to make likelihoods comparable.
@@ -854,7 +838,6 @@ bake(file = paste0(out_dir, "pfilter/simulated_dataset/palfilter_ovov_sim_100.rd
 
 # lik_list$ll_storage |> sum()
 @
-
 
 <<pfilter_wwr, echo=FALSE, message=FALSE, warning=FALSE>>=
 bake(file = paste0(out_dir, "pfilter/original_dataset/pfilter_wwr.rds"),{
@@ -1005,7 +988,7 @@ tab_signif <- 0
 
 \begin{table}[ht] % The placement specifier can be [h!tbp]
 \centering 
-\caption{AIC for the OvOv rotavirus model, computed using two filtering methods. PAL is the Poisson approximate likelihood, implemented using the code of WWR. PF is the particle filter, implemented using the R package pomp \citep{pomppackagepaper}. Lines 1, 2 and 7 are from WWR, and the remainder are our own computations. We used $5\times 10^4$ particle for both PF and PAL. PF was repeated 36 times to reduce the Monte Carlo variance, but this step was not necessary for PAL due to its lower Monte~Carlo variance. PF was maximized using iterated filtering, following the approach of SBH. PAL was maximized using coordinate gradient descent, using the code of WWR.
+\caption{AIC for the OvOv rotavirus model, computed using two filtering methods. PAL is the Poisson approximate likelihood, implemented using the code of WWR. PF is the particle filter, implemented using the R package pomp \citep{pomppackagepaper}. Lines 1, 2 and 7 are from WWR, and the remainder are our own computations. We used $5 \times 10^4$ particle for both PF and PAL. PF was repeated 36 times to reduce the Monte Carlo variance, but this step was not necessary for PAL due to its lower Monte~Carlo variance. PF was maximized using iterated filtering, following the approach of SBH. PAL was maximized using coordinate gradient descent, using the code of WWR.
 } 
 \label{tab:ovovrealdata}
 \begin{tabular}{lllr} 
@@ -1016,7 +999,7 @@ tab_signif <- 0
   \\
   2. & PAL & Table~1 of WWR & \Sexpr{myround(13778.08,tab_signif)}
   \\
-  3. & PAL & Data, model and parameters from WWR &
+  3. & PAL & Re-evaluating the data, model and parameters from WWR &
     \Sexpr{myround(-2*palfilter_lik_list_wwr$log_lik + 2*7 ,tab_signif)} 
   \\
   4. & PF & Data, model and parameters matching 3. &
@@ -1039,22 +1022,23 @@ tab_signif <- 0
  
 SBH fitted their model to a dataset derived by dividing the original reported count data by an estimated reporting rate, to put their data on the scale of the actual number of cases in the population, whereas WWR fitted directly to the report data.
 The reporting rate used by SBH varied over time and location, but was generally around $7\%$.
-On $3\times 416$ data points, this corresponds to a discrepancy of $-1248 \, \log(0.07) \approx 3300$ log-likelihood units, largely explaining the difference interpreted by WWR as evidence supporting PAL.
+On $3\times 416$ data points, this corresponds to a discrepancy of $-1248 \, \log(0.07) \approx 3300$ log-likelihood units, largely explaining the difference interpreted by WWR as evidence supporting PAL (Table~\ref{tab:ovovrealdata}, comparing lines 1 and 2).
 The comparison between PAL and PF can be corrected by applying the method of SBH to the model and data of WWR, or vice versa.
-Since the method of SBH is applicable to a more general class of models, and supported by published software, it was convenient to apply the SBH method to the model and data of WWR.
+Since the method of SBH is applicable to a more general class of models, and supported by widely-used software, it was convenient to apply the SBH method to the model and data of WWR.
 The large discrepancy in log-likelihood disappears when recomputing the likelihood using PF for the model fitted via PAL (Table~\ref{tab:ovovrealdata}, comparing lines 3 and 4).
 Some discrepancy remains, and we continued our investigation to establish the cause of this.
 
-Inspection of log-likelihood anomalies \citep{wheeler24,li24} showed that the initial conditions for the latent process in January 2001 were fixed at values which were incompatible with the trajectory of the data early in the time series.
-By contrast, SBH fixed their initial conditions 6 years before the first measurement, giving time for the system to reach its equilibrum distribution.
-Line 5 of Table~\ref{tab:ovovrealdata} incorporates this into the model of WWR and shows that this improvement enables PF to reach the values attained by PAL.
+Inspection of log-likelihood anomalies \citep{wheeler24,li24} showed that the initial conditions for the latent process in January 2001 were fixed at values which were incompatible with the trajectory of the data early in the time series \citep[Figure~3 of][]{hao24}.
+By contrast, SBH fixed their initial conditions 6 years before the first measurement, giving time for the system to reach its equilibrium distribution.
+Line 5 of Table~\ref{tab:ovovrealdata} incorporates the SBH specification of initial values into the model of WWR.
+Comparison of lines 3 and 5 shows that this improvement enables PF to reach the values attained by PAL, and show a small improvement.
 Further, at the MLE obtained by maximizing PF, we found that PF beats PAL (comparing lines 5 and 6).
 
 WWR compared their fitted models with a log-ARMA(2,1) benchmark AIC value of 23043 (line 7).
-From this high AIC value, they inferred that all the mechanistic models possessing overdispersion have better statistical fit than a simple loglinear time series model.
+From this high AIC value, they inferred that all the mechanistic models possessing overdispersion have better statistical fit than a simple log-linear time series model.
 However, this AIC value corresponds to SBH's data, not the data fitted by WWR.
 Thus, line 7 can be properly compared only to line 1 but not to any other line of  Table~\ref{tab:ovovrealdata}. 
-We independently fitted a log-ARMA(2,1) model to the SBH data and obtained a similar AIC value (\Sexpr{myround(sbh_benchmark,tab_signif)}).
+We refitted a log-ARMA(2,1) model to the SBH data and obtained a similar AIC value (\Sexpr{myround(sbh_benchmark,tab_signif)}).
 Carrying out the same computation for the data fitted by WWR gives a log-ARMA benchmark AIC value of \Sexpr{myround(wwr_benchmark,tab_signif)} (line 8).
 Thus, the statistical fit of the mechanistic model considered by WWR is inferior to a simple log-ARMA model.
 This holds for all the variants in lines 2--6 of  Table~\ref{tab:ovovrealdata}, regardless of whether PF or PAL is used.
@@ -1062,7 +1046,7 @@ The goal of mechanistic modeling is not necessarily to beat a simple statistical
 A correct interpretation of Table~\ref{tab:ovovrealdata} is therefore very different to the conclusions drawn by WWR, who compared line 2 inappropriately to lines 1 and 7. 
 
 
-<<plot1-100-sim-compare,echo=FALSE, fig.height=4, fig.width=5.5, out.width="4.5in",fig.align="center",fig.cap='Log-likelihood computed using PAL and PF for 100 randomly simulated datasets using the model and parameter values of WWR. Simulations with one or more zero counts were disqualified since they resulted in errors for the PAL implementation of WWR. We used $5\times 10^4$ particle for both PF and PAL. PF was repeated 36 times to reduce the Monte Carlo variance, but this step was not necessary for PAL due to its lower Monte~Carlo variance. The red line corresponds to equality of the two estimates.'>>=
+<<plot1-100-sim-compare,echo=FALSE, fig.height=4, fig.width=5.5, out.width="4.5in",fig.align="center",fig.cap='Log-likelihood computed using PAL and PF for 100 randomly simulated datasets using the model and parameter values of WWR. Simulations with one or more zero counts were disqualified since they resulted in errors for the PAL implementation of WWR. We used $5 \\times 10^4$ particle for both PF and PAL. PF was repeated 36 times to reduce the Monte Carlo variance, but this step was not necessary for PAL due to its lower Monte~Carlo variance. The red line corresponds to equality of the two estimates.'>>=
 data <- data.frame(
   pfilter = pfilter_ovov_sim_100, 
   palfilter = palfilter_ovov_sim_100
@@ -1081,20 +1065,20 @@ theme_minimal()
 
 In the presence of model misspecification, it becomes difficult to compare likelihood evaluation methods.
 A likelihood approximation, such as PAL, may potentially obtain a higher value than the exact likelihood if it compensates for model misspecification.
-Log-likelihood is a proper scoring rule for forecasts \cite{gneiting2}, and both the particle filter and PAL construct their log-likelihood estimates via a sequence of one-step forecasts.
+Log-likelihood is a proper scoring rule for forecasts \citep{gneiting2}, and both the particle filter and PAL construct their log-likelihood estimates via a sequence of one-step forecasts.
 Therefore, if the model is correctly specified, the approximation error in PAL can only decrease the expected log-likelihood.
 We tested this on simulated data for which the model of WWR is correctly specified.
 For this simulation study, the particle filter out-performs PAL (Figure~\ref{fig:plot1-100-sim-compare}).
 On average, the particle filter likelihood estimate is $\Sexpr{myround(mean(pfilter_ovov_sim_100)-mean(palfilter_ovov_sim_100),1)}$ log units higher than the PAL.
-We know from the benchmark AIC value in Table~\ref{tab:ovovrealdata}. line 8, that there is substantial model misspecification.
+We know from the benchmark AIC value in Table~\ref{tab:ovovrealdata} (comparing line 8 to lines 2--6) that there is substantial model misspecification.
 
-It is currently unclear why the model of SBH beats the log-ARMA benchmark for the data they fitted to, whereas the model of WWR fits more poorly than the log-ARMA model for its corresponding data.
+It is currently unclear why the model of SBH beats the log-ARMA benchmark for their data, whereas the model of WWR fits more poorly than the log-ARMA model for its corresponding data.
 Additional rounds of model development are required to resolve this, for which it is desirable to employ statistical methods that are broadly applicable both in theory and practice.
-Particle filter methods meet this criterion since they have the plug-and-play property \citep{breto09,he10} which is not posessed by PAL.
+Particle filter methods meet this criterion since they have the plug-and-play property \citep{breto09,he10} which is not possessed by PAL.
 Although WWR have shown that PAL is a potentially useful algorithm with some favorable theoretical properties, the corrected evidence does not indicate an advantage for using PAL in situations where the particle filter is effective.
 
 Also contained additional results reinforcing the conclusions presented in this article.
-The source code for this article is available at \url{https://github.com:ionides/pal-vs-pf} and archived at \ed{ZENODO - TODO}.
+The source code for this article is available at \url{https://github.com:ionides/pal-vs-pf} and archived at Zenodo.
 An extended description of our methods, together with additional numerical results, is provided by \cite{hao24}.
 
 \bibliography{bib-pal}
@@ -1103,200 +1087,3 @@ An extended description of our methods, together with additional numerical resul
 
 \end{document}
 
-\section{Extra material excluded in the final version}
-
-%%%%%%%%% 222222222 %%%%%%%%%%
-
-\section*{Methods}
-
-We first replicated the model of WWR in the R package \texttt{pomp} \citep{pomppackagepaper}.
-Comparing summary statistics of simulations confirms that both model versions are essentially identical, as described by \citet{hao24}.
-We therefore implement PAL using the code from \citet{wwr}, comparing directly with the particle filter implemented using \texttt{pomp}.
-
-This article has focused on likelihood evaluation, but the inferences presented also require the likelihood estimate to be maximized.
-WWR used direct numerical maximization, whereas SBH used iterated filtering to maximize the particle filter likelihood estimate implemented using the \texttt{mif2} algorithm in \texttt{pomp}.
-We follow the approaches adopted by these two papers.
-The optimization method is not directly pertinent to the comparison of the filtering methods, so we do not discuss optimization in further detail here.
-
-\begin{table}[htbp]
-    \caption{Maximum likelihood estimation of parameters for the OvOv model of WWR by PAL (taken from WWR), and by iterated particle filtering implemented using {\rm \texttt{mif2}} in {\rm \texttt{pomp}} \citep{pomppackagepaper}. The initial distribution parameter \(\lambda_0 = (S_{10}, I_{10}, R_{10}, S_{20}, I_{20}, R_{20}, S_{30}, I_{30}, R_{30})\) are assumed to be fixed in \cite{wwr}. The iterated particle filtering estimates were obtained by using 3 rounds of refinement, with 100 filtering iterations, 50,000 particles, and 36 replicates in each round with the top 12 best fits in terms of likelihood chosen to be the starting value for the next round.}
-    \label{tab:mlebywwr}
-\begin{center}    
-    \begin{tabular}{lccc}  % Left-aligned for the first column, centered for the other two columns
-      \toprule
-      Parameter      & PAL      & iterated filtering & iterated filtering (stocks)\\
-      \midrule
-      \(\beta_1\)    & 11.48     & $\Sexpr{round(est_mle_vec["beta1"],2)}$ & $\Sexpr{round(est_mle_vec_sbh["beta1"],2)}$\\
-      \(\beta_2\)    & 0.25      & $\Sexpr{round(est_mle_vec["beta2"],2)}$ & $\Sexpr{round(est_mle_vec_sbh["beta2"],2)}$\\
-      \(\beta_3\)    & 0.35      & $\Sexpr{round(est_mle_vec["beta3"],2)}$ & $\Sexpr{round(est_mle_vec_sbh["beta3"],2)}$\\
-      \(\phi\)       & 0.14      & $\Sexpr{round(est_mle_vec["phi"],2)}$   & $\Sexpr{round(est_mle_vec_sbh["phi"],2)}$\\
-      \(\rho\)       & 0.16      & $\Sexpr{round(est_mle_vec["beta11"],2)}$ & $\Sexpr{round(est_mle_vec_sbh["beta11"],2)}$\\
-      \(\sigma^2_q\) & 0.021     & $\Sexpr{round(est_mle_vec["sigma_q"],3)}$ & $\Sexpr{round(est_mle_vec_sbh["sigma_q"],3)}$\\
-      \(\sigma_\xi\) & 66.89     & $\Sexpr{round(est_mle_vec["sigma_xi"],2)}$ & $\Sexpr{round(est_mle_vec["sigma_xi"],2)}$\\
-      \(S_{10}\)     & 3876549   & $\Sexpr{round(pop*est_mle_vec["S10"],0)}$  & $5094840$\\
-      \(I_{10}\)     & 30351     & $\Sexpr{round(pop*est_mle_vec["I10"],0)}$  & $2871$\\
-      \(R_{10}\)     & 1315221   & $\Sexpr{round(pop*est_mle_vec["R10"],0)}$  & $124410$\\
-      \(S_{20}\)     & 57139612  & $\Sexpr{round(pop*est_mle_vec["S20"],0)}$  & $57385600$\\
-      \(I_{20}\)     & 871       & $\Sexpr{round(pop*est_mle_vec["I20"],0)}$  & $639$\\
-      \(R_{20}\)     & 302852    & $\Sexpr{round(pop*est_mle_vec["R20"],0)}$  & $57072$\\
-      \(S_{30}\)     & 19573727  & $\Sexpr{round(pop*est_mle_vec["S30"],0)}$  & $19697600$\\
-      \(I_{30}\)     & 2550      & $\Sexpr{round(pop*est_mle_vec["I30"],0)}$  & $174$\\
-      \(R_{30}\)     & 131092    & $\Sexpr{round(pop*est_mle_vec["R30"],0)}$  & $9578$\\
-      \midrule
-      \textbf{AIC}  & 13778.08  & $\Sexpr{round(2*((length(params_wwr) - length(params_fixed)) - est_mle_vec["logLik"]),2)}$ & $\Sexpr{round(2*((length(params_wwr) - length(params_fixed)) - est_mle_vec_sbh["logLik"]),2)}$\\
-      \bottomrule
-    \end{tabular}
-\end{center}
-\end{table}
-
-<<maximization7-Stocks_rinit, include=FALSE>>=
-set.seed(12345)
-sd_07 = (2/3)^6
-starting_values_sbh_07 <- choose_n_fits(sbh_el_06, top_n_fits, ncores)
-
-bake(file = paste0(out_dir, "mif2_maximization/SBH_init/round_07/mifs_global_sbh_07.rds"),{ 
-  plan(multicore, workers = ncores)
-  foreach(i = 1:ncores, .options.future = list(seed = 652643293)) %dofuture% {
-    pomp::mif2(
-      mifs_global_sbh_06[[1]],
-      rw.sd = rw_sd(
-        beta1 = 0.01*sd_07, beta2 = 0.01*sd_07, beta3 = 0.01*sd_07,
-        beta11 = 0.01*sd_07, phi = 0.01*sd_07,
-        sigma_q = 0.01*sd_07, sigma_xi = 0.01*sd_07
-      ),
-      params = starting_values_sbh_07[[i]]
-    ) 
-  }
-}) -> mifs_global_sbh_07
-
-
-bake(file = paste0(out_dir,"mif2_maximization/SBH_init/round_07/sbh_el_07.rds"),{
-  eval_logLik_pomp(mifs_global_sbh_07, ncores, NP_MIF, seed = 4248930)
-}) ->  sbh_el_07
-@
-
-<<PAL-MLE-from-mif2, echo=FALSE, message=FALSE, warning=FALSE>>=
-prop <- 420
-realdat <- as.matrix(dat[,-1])
-init_dist_mif2_mle <- c(
-  pop*as.numeric(est_mle_vec["S10"]), 
-  pop*as.numeric(est_mle_vec["I10"]), 
-  pop*as.numeric(est_mle_vec["R10"]),
-  pop*as.numeric(est_mle_vec["S20"]),
-  pop*as.numeric(est_mle_vec["R20"]),
-  pop*as.numeric(est_mle_vec["I20"]),
-  pop*as.numeric(est_mle_vec["S30"]),
-  pop*as.numeric(est_mle_vec["R30"]),
-  pop*as.numeric(est_mle_vec["I30"])
-)
-
-initial_guess_mif2_mle <- c(
-  as.numeric(est_mle_vec["beta1"]), 
-  as.numeric(est_mle_vec["beta2"]), 
-  as.numeric(est_mle_vec["beta3"]),
-  as.numeric(est_mle_vec["phi"]),
-  as.numeric(est_mle_vec["beta11"]),
-  as.numeric(est_mle_vec["sigma_q"]),
-  as.numeric(est_mle_vec["sigma_xi"])
-)
-
-bake(file = paste0(out_dir,"pfilter/original_dataset/palfilter_mif2_mle.rds"),{
- set.seed(1223)
- rotavirus_SMC_qropxi(
-    init_dist = init_dist_mif2_mle, 
-    y_obs = realdat, 
-    m = 9, 
-    regular_params = c(
-      initial_guess_mif2_mle[1], 
-      initial_guess_mif2_mle[2], 
-      initial_guess_mif2_mle[3], 
-      initial_guess_mif2_mle[4],
-      initial_guess_mif2_mle[5]
-    ), 
-    gamma_par = c(initial_guess_mif2_mle[7], 1/initial_guess_mif2_mle[7]), 
-    norm_par = c(0.07, initial_guess_mif2_mle[6]), 
-    prop = t(prop), 
-    n_particles = NP_MIF, 
-    ncores = ncores
-  ) 
-}) -> palfilter_mif2_mle
-@
-
-<<plot2-cond-loglik, echo=FALSE, fig.height=4, fig.width=5.5, out.width="4.5in",fig.align="center", fig.cap='Conditional log-likelihoods computed using PAL (red) and PF (blue) for the rotavirus model and MLE from WWR. We used 50000 particle for both PF and PAL. PF averaged over 36 replications to reduce the Monte Carlo variance, but this step was not necessary for PAL. The main sources of likelihood shortfall of PF are at time points $t=1, 2, 3, 11, 81, 194$, and $325-333$.'>>=
-
-# Combine the data into a single dataframe for SMC with grouping variable
-data_list <- lapply(1:ncores, function(i) {
-  data.frame(
-    time = time, 
-    cond_loglik = pfilter_wwr_cond_lik[[i]], 
-    method = "SMC",
-    group = i
-  )
-})
-
-# Combine all the SMC data frames into one
-df_smc <- bind_rows(data_list)
-
-# Create the PAL data frame
-df_pal <- data.frame(
-  time = time, 
-  cond_loglik = palfilter_lik_list_wwr$ll_storage, 
-  method = "PAL",
-  group = 1  # Single group for PAL
-)
-
-# Combine both data frames
-df <- bind_rows(df_smc, df_pal)
-
-# Plot with ggplot
-ggplot(df, aes(x = time, y = cond_loglik, color = method)) +
-  geom_line(data = df %>% filter(method == "SMC"), aes(group = group), color = "blue", alpha = 0.7) +
-  geom_line(data = df %>% filter(method == "PAL"), aes(group = group), color = "red") +
-  theme_minimal() +
-  labs(
-    title = NULL,
-    x = "Time (weeks)",
-    y = "Conditional Log-likelihood",
-    color = "Method"
-  ) +
-  theme(legend.position = "bottom")
-@
-
-
-\begin{table}[htbp]
-    \caption{Maximum likelihood estimation of parameters for the OvOv model of WWR by PAL (taken from WWR), and by iterated particle filtering implemented using {\rm \texttt{mif2}} in {\rm \texttt{pomp}} \citep{pomppackagepaper}. The initial distribution parameter \(\lambda_0 = (S_{10}, I_{10}, R_{10}, S_{20}, I_{20}, R_{20}, S_{30}, I_{30}, R_{30})\) are assumed to be fixed in \cite{wwr}. The iterated particle filtering estimates were obtained by using 3 rounds of refinement, with 100 filtering iterations, 50,000 particles, and 36 replicates in each round with the top 12 best fits in terms of likelihood chosen to be the starting value for the next round.}
-    \label{tab:mlebywwr}
-\begin{center}    
-    \begin{tabular}{lccc}  % Left-aligned for the first column, centered for the other two columns
-      \toprule
-      Parameter      & PAL      & iterated filtering & iterated filtering (stocks)\\
-      \midrule
-      \(\beta_1\)    & 11.48     & $\Sexpr{round(est_mle_vec["beta1"],2)}$ & $\Sexpr{round(est_mle_vec_sbh["beta1"],2)}$\\
-      \(\beta_2\)    & 0.25      & $\Sexpr{round(est_mle_vec["beta2"],2)}$ & $\Sexpr{round(est_mle_vec_sbh["beta2"],2)}$\\
-      \(\beta_3\)    & 0.35      & $\Sexpr{round(est_mle_vec["beta3"],2)}$ & $\Sexpr{round(est_mle_vec_sbh["beta3"],2)}$\\
-      \(\phi\)       & 0.14      & $\Sexpr{round(est_mle_vec["phi"],2)}$   & $\Sexpr{round(est_mle_vec_sbh["phi"],2)}$\\
-      \(\rho\)       & 0.16      & $\Sexpr{round(est_mle_vec["beta11"],2)}$ & $\Sexpr{round(est_mle_vec_sbh["beta11"],2)}$\\
-      \(\sigma^2_q\) & 0.021     & $\Sexpr{round(est_mle_vec["sigma_q"],3)}$ & $\Sexpr{round(est_mle_vec_sbh["sigma_q"],3)}$\\
-      \(\sigma_\xi\) & 66.89     & $\Sexpr{round(est_mle_vec["sigma_xi"],2)}$ & $\Sexpr{round(est_mle_vec_sbh["sigma_xi"],2)}$\\
-      \(S_{10}\)     & 3876549   & $\Sexpr{round(pop*est_mle_vec["S10"],0)}$  & $5094840$\\
-      \(I_{10}\)     & 30351     & $\Sexpr{round(pop*est_mle_vec["I10"],0)}$  & $2871$\\
-      \(R_{10}\)     & 1315221   & $\Sexpr{round(pop*est_mle_vec["R10"],0)}$  & $124410$\\
-      \(S_{20}\)     & 57139612  & $\Sexpr{round(pop*est_mle_vec["S20"],0)}$  & $57385600$\\
-      \(I_{20}\)     & 871       & $\Sexpr{round(pop*est_mle_vec["I20"],0)}$  & $639$\\
-      \(R_{20}\)     & 302852    & $\Sexpr{round(pop*est_mle_vec["R20"],0)}$  & $57072$\\
-      \(S_{30}\)     & 19573727  & $\Sexpr{round(pop*est_mle_vec["S30"],0)}$  & $19697600$\\
-      \(I_{30}\)     & 2550      & $\Sexpr{round(pop*est_mle_vec["I30"],0)}$  & $174$\\
-      \(R_{30}\)     & 131092    & $\Sexpr{round(pop*est_mle_vec["R30"],0)}$  & $9578$\\
-      \midrule
-      \textbf{AIC}  & 13778.08  & $\Sexpr{round(2*((length(params_wwr) - length(params_fixed)) - est_mle_vec["logLik"]),2)}$ & $\Sexpr{round(2*((length(params_wwr) - length(params_fixed)) - est_mle_vec_sbh["logLik"]),2)}$\\
-      \bottomrule
-    \end{tabular}
-\end{center}
-\end{table}
-
-
-
-Figure~\ref{fig:plot2-cond-loglik} indicates that the worst conditional log-likelihood values, estimated using the particle filter, arise at the start of the time series.
-This could be a problem with data collection, or some subtle issue with the science of the epidemiological system, but a simple possibility is that the initial values of the latent state process might be poorly specified.
-For this model, the initial values were fixed based on scientific reasoning, rather than being estimated.
-If we instead estimate the initial values, we obtain the results in Table~\ref{tab:mlebywwr}. 
