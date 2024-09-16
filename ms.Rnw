@@ -931,7 +931,7 @@ for(i in 1:n_sim){
   r3_t1_vec[i] <- sim_sbh_init_for_pal[[i]]@states["R3",2]
 }
 
-init_dist_sbh_mle <- c(
+sbh_mean_state <- c(
   S1=round(mean(s1_t1_vec),0),
   I1=round(mean(i1_t1_vec),0),
   R1=round(mean(r1_t1_vec),0),
@@ -942,6 +942,15 @@ init_dist_sbh_mle <- c(
   I3=round(mean(i3_t1_vec),0),
   R3=round(mean(r3_t1_vec),0)
 )
+
+#calculate the difference in the init dist
+diff <- sum(sbh_mean_state) - pop
+#reduce the differenc proportionally
+init_dist_sbh_mle <- round(sbh_mean_state - diff*(sbh_mean_state/sum(sbh_mean_state)),0)
+#check if init_dist == pop
+sum(init_dist_sbh_mle) == pop
+
+#sum(init_dist_sbh_mle) == pop
 @
 
 <<palfilter-at-mle_sbh, echo=FALSE, message=FALSE, warning=FALSE>>=
