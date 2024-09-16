@@ -3,5 +3,5 @@ This repository contains the source code for "Poisson approximate likelihood com
 
 It is run in R by ```knitr::knit('ms.Rnw')```
 
-The main calculations were carried out on the greatlakes Linux cluster at University of Michigan.
+The main calculations were carried out on the greatlakes Linux cluster at University of Michigan. The session info for the cluster can be found in the file "sessionInfo.txt".
 
