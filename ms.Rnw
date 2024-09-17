@@ -370,7 +370,7 @@ sir_full <- pomp(
 @
 
 
-% Maximization Round 1 - Full rinit
+% Maximization Round 1 - Full rinit: also estimate initial values
 
 <<maximization1, echo=F, warning=F, message=F>>=
 set.seed(123)
@@ -434,7 +434,7 @@ bake(file = paste0(out_dir, "mif2_maximization/full/round_01/el_01.rds"),{
 
 @
 
-% Continue: Maximization Round 2 - Full rinit
+% Round 2 - Full rinit
 
 <<maximization2, echo=F, warning=F, message=F>>=
 set.seed(1234)
@@ -465,7 +465,7 @@ bake(file = paste0(out_dir, "mif2_maximization/full/round_02/el_02.rds"),{
 }) ->  el_02
 @
 
-% Continue: Maximization Round 3 - Full rinit
+% Round 3 - Full rinit
 
 <<maximization3, echo=F, warning=F, message=F>>=
 set.seed(12345)
@@ -502,7 +502,7 @@ est_mle_vec <- el_03[which.max(el_03$logLik),]
 @
 
 
-% Maximization Round 1 - Stocks rinit
+% Maximization Round 1 - Fix initial values with Stocks' rinit
 
 <<maximization1-Stocks_rinit, echo=F, warning=F, message=F>>=
 set.seed(123)
@@ -573,7 +573,7 @@ bake(file = paste0(out_dir, "mif2_maximization/SBH_init/round_01/sbh_el_01.rds")
 }) -> sbh_el_01
 @
 
-% Continue: Maximization Round 2 - Stocks rinit
+% Round 2 - Stocks rinit
 
 <<maximization2-Stocks_rinit, echo=F, warning=F, message=F>>=
 set.seed(1234)
@@ -601,7 +601,7 @@ bake(file = paste0(out_dir, "mif2_maximization/SBH_init/round_02/sbh_el_02.rds")
 }) -> sbh_el_02
 @
 
-% Continue: Maximization Round 3 - Stocks rinit
+% Round 3 - Stocks rinit
 
 <<maximization3-Stocks_rinit, echo=F, warning=F, message=F>>=
 set.seed(12345)
@@ -629,6 +629,8 @@ bake(file = paste0(out_dir,"mif2_maximization/SBH_init/round_03/sbh_el_03.rds"),
 }) ->  sbh_el_03
 @
 
+% Round 4 - Stocks rinit
+
 <<maximization4-Stocks_rinit, echo=F, warning=F, message=F>>=
 set.seed(12345)
 sd_04 = (2/3)^3
@@ -655,6 +657,8 @@ bake(file = paste0(out_dir,"mif2_maximization/SBH_init/round_04/sbh_el_04.rds"),
 }) ->  sbh_el_04
 @
 
+% Round 5 - Stocks rinit
+
 <<maximization5-Stocks_rinit, echo=F, warning=F, message=F>>=
 set.seed(12345)
 sd_05 = (2/3)^4
@@ -680,6 +684,8 @@ bake(file = paste0(out_dir,"mif2_maximization/SBH_init/round_05/sbh_el_05.rds"),
   eval_logLik_pomp(mifs_global_sbh_05, ncores, NP_MIF, seed = 4248930)
 }) ->  sbh_el_05
 @
+
+% Round 6 - Stocks rinit
 
 <<maximization6-Stocks_rinit, echo=F, warning=F, message=F>>=
 set.seed(12345)
@@ -991,34 +997,58 @@ tab_signif <- 0
 \caption{AIC for the OvOv rotavirus model, computed using two filtering methods. PAL is the Poisson approximate likelihood, implemented using the code of WWR. PF is the particle filter, implemented using the R package pomp \citep{pomppackagepaper}. Lines 1, 2 and 7 are from WWR, and the remainder are our own computations. We used $5 \times 10^4$ particle for both PF and PAL. PF was repeated 36 times to reduce the Monte Carlo variance, but this step was not necessary for PAL due to its lower Monte~Carlo variance. PF was maximized using iterated filtering, following the approach of SBH. PAL was maximized using coordinate gradient descent, using the code of WWR.
 } 
 \label{tab:ovovrealdata}
-\begin{tabular}{lllr} 
+\begin{tabular}{lllllr} 
   \hline
-  & Method & Result & AIC  \\
+  & Method & Data & Model & Parameters                          & AIC  \\
   \hline
-  1. & PF & Table~1 of WWR, originally from SBH &  \Sexpr{myround(20134.38,tab_signif)}
+  1. & PF  & SBH  & SBH   & Table~1 of WWR, originally from SBH &  \Sexpr{myround(20134.38,tab_signif)}
   \\
-  2. & PAL & Table~1 of WWR & \Sexpr{myround(13778.08,tab_signif)}
+  2. & PAL & WWR  & WWR   & Table~1 of WWR                      & \Sexpr{myround(13778.08,tab_signif)}
   \\
-  3. & PAL & Re-evaluating the data, model and parameters from WWR &
+  3. & PAL & WWR  & WWR   & Re-evaluating the data, parameters from WWR &
     \Sexpr{myround(-2*palfilter_lik_list_wwr$log_lik + 2*7 ,tab_signif)} 
   \\
-  4. & PF & Data, model and parameters matching 3. &
+  4. & PF  & WWR & WWR    & Parameters matching 3. &
     \Sexpr{myround(-2*logmeanexp(logLik(pfilter_wwr)) + 2*7,tab_signif)}
   \\
-  5. & PF & Initial values changed to match SBH &
+  5. & PF  & WWR & WWR modified   & Initial values changed to match SBH &
      \Sexpr{myround(-2*est_mle_vec_sbh["logLik"] + 2*7,tab_signif)}
   \\
-  6. & PAL & Data, model and parameters matching 5.  &
+  6. & PAL & WWR & WWR modified   & Data, model and parameters matching 5.  &
      \Sexpr{myround(-2*palfilter_mif2_mle$log_lik + 2*7 ,tab_signif)}
   \\   
-  7. & ARMA & Sec.~7.3.2 of WWR & 23043
+  7. & ARMA & SBH & ARMA benchmark    & Sec.~7.3.2 of WWR & 23043
   \\
-  8. & ARMA & Data from WWR &
+  8. & ARMA & WWR & ARMA benchmark      & ARMA benchmark &
     \Sexpr{myround(wwr_benchmark,tab_signif)} 
   \\
  \hline
 \end{tabular}
 \end{table}
+
+\begin{table}[ht] % The placement specifier can be [h!tbp]
+\centering 
+\caption{AIC for the OvOv rotavirus model, computed using two filtering methods. PAL is the Poisson approximate likelihood, implemented using the code of WWR. PF is the particle filter, implemented using the R package pomp \citep{pomppackagepaper}. Lines 1, 2 and 7 are from WWR, and the remainder are our own computations. We used $5 \times 10^4$ particle for both PF and PAL. PF was repeated 36 times to reduce the Monte Carlo variance, but this step was not necessary for PAL due to its lower Monte~Carlo variance. PF was maximized using iterated filtering, following the approach of SBH. PAL was maximized using coordinate gradient descent, using the code of WWR.}
+\label{tab:ovovrealdata}
+\begin{tabular}{lllllr} 
+  \hline
+  & Method   & Data  & Model & Parameters \& Source                    & AIC  \\  
+  \hline
+  1. & PF      & SBH   & SBH   & Table~1 of WWR, originally from SBH &  \Sexpr{myround(20134.38,tab_signif)} \\
+  2. & PAL     & WWR   & WWR   & Table~1 of WWR                      & \Sexpr{myround(13778.08,tab_signif)} \\
+  3. & PAL     & WWR   & WWR   & Re-evaluating the data, parameters from WWR & \Sexpr{myround(-2*palfilter_lik_list_wwr$log_lik + 2*7 ,tab_signif)} \\
+  4. & PF      & WWR   & WWR   & Parameters matching 3. & \Sexpr{myround(-2*logmeanexp(logLik(pfilter_wwr)) + 2*7,tab_signif)} \\
+  5. & PF      & WWR   & WWR modified   & Initial values changed to match SBH & \Sexpr{myround(-2*est_mle_vec_sbh["logLik"] + 2*7,tab_signif)} \\
+  6. & PAL     & WWR   & WWR modified   & Data, model and parameters matching 5. & \Sexpr{myround(-2*palfilter_mif2_mle$log_lik + 2*7 ,tab_signif)} \\
+  \hline
+     & Benchmark &  &  &  \\
+  \hline
+  7. & ARMA    & SBH   & \multicolumn{2}{c}{\centering Sec.~7.3.2 of WWR}             & 23043 \\
+  8. & ARMA    & WWR   & \multicolumn{2}{c}{\centering Re-evaluating 7. with data used by WWR}                 & \Sexpr{myround(wwr_benchmark,tab_signif)} \\
+  \hline
+\end{tabular}
+\end{table}
+
  
 SBH fitted their model to a dataset derived by dividing the original reported count data by an estimated reporting rate, to put their data on the scale of the actual number of cases in the population, whereas WWR fitted directly to the report data.
 The reporting rate used by SBH varied over time and location, but was generally around $7\%$.
@@ -1077,7 +1107,6 @@ Additional rounds of model development are required to resolve this, for which i
 Particle filter methods meet this criterion since they have the plug-and-play property \citep{breto09,he10} which is not possessed by PAL.
 Although WWR have shown that PAL is a potentially useful algorithm with some favorable theoretical properties, the corrected evidence does not indicate an advantage for using PAL in situations where the particle filter is effective.
 
-Also contained additional results reinforcing the conclusions presented in this article.
 The source code for this article is available at \url{https://github.com:ionides/pal-vs-pf} and archived at Zenodo.
 An extended description of our methods, together with additional numerical results, is provided by \cite{hao24}.
 
