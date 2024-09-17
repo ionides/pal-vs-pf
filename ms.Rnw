@@ -1091,7 +1091,7 @@ Additional rounds of model development are required to resolve this, for which i
 Particle filter methods meet this criterion since they have the plug-and-play property \citep{breto09,he10} which is not possessed by PAL.
 Although WWR have shown that PAL is a potentially useful algorithm with some favorable theoretical properties, the corrected evidence does not indicate an advantage for using PAL in situations where the particle filter is effective.
 
-The source code for this article is available at \url{https://github.com:ionides/pal-vs-pf} and archived at Zenodo.
+The source code for this article is available at \url{https://github.com/ionides/pal-vs-pf} and archived at Zenodo.
 An extended description of our methods, together with additional numerical results, is provided by \cite{hao24}.
 
 \bibliography{bib-pal}
