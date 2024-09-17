@@ -370,7 +370,7 @@ sir_full <- pomp(
 @
 
 
-% Maximization Round 1 - Full rinit
+% Maximization Round 1 - Full rinit: also estimate initial values
 
 <<maximization1, echo=F, warning=F, message=F>>=
 set.seed(123)
@@ -434,7 +434,7 @@ bake(file = paste0(out_dir, "mif2_maximization/full/round_01/el_01.rds"),{
 
 @
 
-% Continue: Maximization Round 2 - Full rinit
+% Round 2 - Full rinit
 
 <<maximization2, echo=F, warning=F, message=F>>=
 set.seed(1234)
@@ -465,7 +465,7 @@ bake(file = paste0(out_dir, "mif2_maximization/full/round_02/el_02.rds"),{
 }) ->  el_02
 @
 
-% Continue: Maximization Round 3 - Full rinit
+% Round 3 - Full rinit
 
 <<maximization3, echo=F, warning=F, message=F>>=
 set.seed(12345)
@@ -502,7 +502,7 @@ est_mle_vec <- el_03[which.max(el_03$logLik),]
 @
 
 
-% Maximization Round 1 - Stocks rinit
+% Maximization Round 1 - Fix initial values with Stocks' rinit
 
 <<maximization1-Stocks_rinit, echo=F, warning=F, message=F>>=
 set.seed(123)
@@ -573,7 +573,7 @@ bake(file = paste0(out_dir, "mif2_maximization/SBH_init/round_01/sbh_el_01.rds")
 }) -> sbh_el_01
 @
 
-% Continue: Maximization Round 2 - Stocks rinit
+% Round 2 - Stocks rinit
 
 <<maximization2-Stocks_rinit, echo=F, warning=F, message=F>>=
 set.seed(1234)
@@ -601,7 +601,7 @@ bake(file = paste0(out_dir, "mif2_maximization/SBH_init/round_02/sbh_el_02.rds")
 }) -> sbh_el_02
 @
 
-% Continue: Maximization Round 3 - Stocks rinit
+% Round 3 - Stocks rinit
 
 <<maximization3-Stocks_rinit, echo=F, warning=F, message=F>>=
 set.seed(12345)
@@ -629,6 +629,8 @@ bake(file = paste0(out_dir,"mif2_maximization/SBH_init/round_03/sbh_el_03.rds"),
 }) ->  sbh_el_03
 @
 
+% Round 4 - Stocks rinit
+
 <<maximization4-Stocks_rinit, echo=F, warning=F, message=F>>=
 set.seed(12345)
 sd_04 = (2/3)^3
@@ -655,6 +657,8 @@ bake(file = paste0(out_dir,"mif2_maximization/SBH_init/round_04/sbh_el_04.rds"),
 }) ->  sbh_el_04
 @
 
+% Round 5 - Stocks rinit
+
 <<maximization5-Stocks_rinit, echo=F, warning=F, message=F>>=
 set.seed(12345)
 sd_05 = (2/3)^4
@@ -680,6 +684,8 @@ bake(file = paste0(out_dir,"mif2_maximization/SBH_init/round_05/sbh_el_05.rds"),
   eval_logLik_pomp(mifs_global_sbh_05, ncores, NP_MIF, seed = 4248930)
 }) ->  sbh_el_05
 @
+
+% Round 6 - Stocks rinit
 
 <<maximization6-Stocks_rinit, echo=F, warning=F, message=F>>=
 set.seed(12345)
@@ -990,37 +996,39 @@ tab_signif <- 0
 
 \begin{table}[ht] % The placement specifier can be [h!tbp]
 \centering 
-\caption{AIC for the OvOv rotavirus model, computed using two filtering methods. PAL is the Poisson approximate likelihood, implemented using the code of WWR. PF is the particle filter, implemented using the R package pomp \citep{pomppackagepaper}. Lines 1, 2 and 7 are from WWR, and the remainder are our own computations. We used $5 \times 10^4$ particles for both PF and PAL. PF was repeated 36 times to reduce the Monte Carlo variance, but this step was not necessary for PAL due to its lower Monte~Carlo variance. PF results were maximized using iterated filtering, following the approach of SBH. PAL results were maximized using coordinate gradient descent, using the code of WWR.
+\caption{AIC for the OvOv rotavirus model, computed using two filtering methods. PAL is the Poisson approximate likelihood, implemented using the code of WWR. PF is the particle filter, implemented using the R package pomp \citep{pomppackagepaper}. Lines 1, 2 and 7 are taken from WWR, and the remainder are our own computations. Line 3 recomputes the previously published value in Line 2, and the small difference is presumably due to rounding in Table~2 of WWR. We used $5 \times 10^4$ particles for both PF and PAL. PF was repeated 36 times to reduce the Monte Carlo variance, but this step was not necessary for PAL due to its lower Monte~Carlo variance. PF results were maximized using iterated filtering, following the approach of SBH. PAL results were maximized using coordinate gradient descent, using the code of WWR.
 } 
 \label{tab:ovovrealdata}
-\begin{tabular}{llllr} 
+\begin{tabular}{lllllr} 
   \hline
-  & Method & Data & Model & AIC  \\
+  & Method & Data & Model & Parameters                          & AIC  \\
   \hline
-  1. & PF & Rescaled counts & SBH &  \Sexpr{myround(20134.38,tab_signif)}
+  1. & PF  & Rescaled counts  & SBH   & Table~2 of SBH &  \Sexpr{myround(20134.38,tab_signif)}
   \\
-  2. & PAL & Counts &  WWR & \Sexpr{myround(13778.08,tab_signif)}
+  2. & PAL & Counts  & WWR   & Table~2 of WWR                      & \Sexpr{myround(13778.08,tab_signif)}
   \\
-  3. & PAL & Counts & Re-evaluating WWR at published parameters &
+  3. & PAL & Counts  & WWR   & Table~2 of WWR  &
     \Sexpr{myround(-2*palfilter_lik_list_wwr$log_lik + 2*7 ,tab_signif)} 
   \\
-  4. & PF & Counts & Model and parameters matching line 3 &
+  4. & PF  & Counts & WWR    & Table~2 of WWR &
     \Sexpr{myround(-2*logmeanexp(logLik(pfilter_wwr)) + 2*7,tab_signif)}
   \\
-  5. & PF & Counts & WWR with initial values changed to SBH &
+  5. & PF  & Counts & WWR modified   & Maximum likelihood &
      \Sexpr{myround(-2*est_mle_vec_sbh["logLik"] + 2*7,tab_signif)}
   \\
-  6. & PAL & Counts & Model and parameters matching line 5  &
+  6. & PAL & Counts & WWR modified   & Matching line 5 &
      \Sexpr{myround(-2*palfilter_mif2_mle$log_lik + 2*7 ,tab_signif)}
   \\   
-  7. & Benchmark & Rescaled counts  & log-ARMA$(2,1)$ & 23043
+  7. & Benchmark & Rescaled counts & log-ARMA(2,1)    &  & 23043
   \\
-  8. & Benchmark & Counts           &  log-ARMA$(2,1)$ & \Sexpr{myround(wwr_benchmark,tab_signif)} 
+  8. & Benchmark & Counts & log-ARMA(2,1)      &  &
+    \Sexpr{myround(wwr_benchmark,tab_signif)} 
   \\
  \hline
 \end{tabular}
 \end{table}
- 
+
+
 SBH fitted their model to a dataset of rescaled counts derived by dividing the original reported count data by an estimated reporting rate.
 Thus, SBH fitted to data on the scale of the disease incidence in the population.
 By contrast, WWR fitted directly to the reported case count data.
@@ -1034,8 +1042,9 @@ Some discrepancy remains, and we continued our investigation to establish the ca
 Inspection of log-likelihood anomalies \citep{wheeler24,li24} showed that the initial conditions for the latent process in January 2001 were fixed at values which were incompatible with the trajectory of the data early in the time series \citep[Figure~3 of][]{hao24}.
 By contrast, SBH fixed their initial conditions 6 years before the first measurement, giving time for the system to reach its equilibrium distribution.
 Line 5 of Table~\ref{tab:ovovrealdata} incorporates the SBH specification of initial values into the model of WWR.
-Comparison of lines 3 and 5 shows that this improvement enables PF to reach the values attained by PAL, and show a small improvement.
-Further, at the MLE obtained by maximizing with PF, we found that PF beats PAL (comparing lines 5 and 6).
+The likelihood for this modified model was then maximized using an iterated filtering procedure similar to SBH.
+Comparison of lines 3 and 5 shows that this improvement enables PF to reach the AIC values attained by PAL, and show a small improvement.
+Further, at the parameter values obtained by maximizing with PF, we found that PF beats PAL (comparing lines 5 and 6).
 
 WWR compared their fitted models with a log-ARMA(2,1) benchmark AIC value of 23043 (line 7).
 From this high AIC value, they inferred that all the mechanistic models possessing overdispersion have better statistical fit than a simple log-linear time series model.
