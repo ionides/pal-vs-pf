@@ -33,7 +33,7 @@ Filtering algorithms are fundamental for inference on partially observed stochas
 A novel Poisson approximate likelihood (PAL) filter was introduced by \cite{wwr}.
 PAL employs a Poisson approximation to conditional densities, offering a fast approximation to the likelihood function for a certain subset of partially observed Markov process models.
 A central piece of evidence for PAL is the comparison in Table~1 of \cite{wwr}, which claims a large improvement for PAL over a standard particle filter algorithm.
-This evidence, based on a model and data from a previous scientific study by \citet{stocks}, might suggests that researchers confronted with similar models should use PAL rather than particle filter methods.
+This evidence, based on a model and data from a previous scientific study by \citet{stocks}, might suggest that researchers confronted with similar models should use PAL rather than particle filter methods.
 Taken at face value, this evidence also reduces the credibility of \cite{stocks} by indicating a shortcoming with the numerical methods that they used.
 However, we show that the comparison of log-likelihood values made by \cite{wwr} is flawed because their PAL calculations were carried out using a dataset scaled differently from the previous study.
 If PAL and the particle filter are applied to the same data, the advantage claimed for PAL disappears.
@@ -992,9 +992,10 @@ wwr_benchmark <- sum(apply(realdat,2, function(x)
 tab_signif <- 0
 @
 
+\section{Results}
 \begin{table}[ht] % The placement specifier can be [h!tbp]
 \centering 
-\caption{AIC for the OvOv rotavirus model, computed using two filtering methods. PAL is the Poisson approximate likelihood, implemented using the code of WWR. PF is the particle filter, implemented using the R package pomp \citep{pomppackagepaper}. Lines 1, 2 and 7 are from WWR, and the remainder are our own computations. We used $5 \times 10^4$ particle for both PF and PAL. PF was repeated 36 times to reduce the Monte Carlo variance, but this step was not necessary for PAL due to its lower Monte~Carlo variance. PF was maximized using iterated filtering, following the approach of SBH. PAL was maximized using coordinate gradient descent, using the code of WWR.
+\caption{AIC for the OvOv rotavirus model, computed using two filtering methods. PAL is the Poisson approximate likelihood, implemented using the code of WWR. PF is the particle filter, implemented using the R package pomp \citep{pomppackagepaper}. Lines 1, 2 and 7 are from WWR, and the remainder are our own computations. We used $5 \times 10^4$ particles for both PF and PAL. PF was repeated 36 times to reduce the Monte Carlo variance, but this step was not necessary for PAL due to its lower Monte~Carlo variance. PF results were maximized using iterated filtering, following the approach of SBH. PAL results were maximized using coordinate gradient descent, using the code of WWR.
 } 
 \label{tab:ovovrealdata}
 \begin{tabular}{lllllr} 
@@ -1062,7 +1063,7 @@ Inspection of log-likelihood anomalies \citep{wheeler24,li24} showed that the in
 By contrast, SBH fixed their initial conditions 6 years before the first measurement, giving time for the system to reach its equilibrium distribution.
 Line 5 of Table~\ref{tab:ovovrealdata} incorporates the SBH specification of initial values into the model of WWR.
 Comparison of lines 3 and 5 shows that this improvement enables PF to reach the values attained by PAL, and show a small improvement.
-Further, at the MLE obtained by maximizing PF, we found that PF beats PAL (comparing lines 5 and 6).
+Further, at the MLE obtained by maximizing with PF, we found that PF beats PAL (comparing lines 5 and 6).
 
 WWR compared their fitted models with a log-ARMA(2,1) benchmark AIC value of 23043 (line 7).
 From this high AIC value, they inferred that all the mechanistic models possessing overdispersion have better statistical fit than a simple log-linear time series model.
@@ -1076,7 +1077,7 @@ The goal of mechanistic modeling is not necessarily to beat a simple statistical
 A correct interpretation of Table~\ref{tab:ovovrealdata} is therefore very different to the conclusions drawn by WWR, who compared line 2 inappropriately to lines 1 and 7. 
 
 
-<<plot1-100-sim-compare,echo=FALSE, fig.height=4, fig.width=5.5, out.width="4.5in",fig.align="center",fig.cap='Log-likelihood computed using PAL and PF for 100 randomly simulated datasets using the model and parameter values of WWR. Simulations with one or more zero counts were disqualified since they resulted in errors for the PAL implementation of WWR. We used $5 \\times 10^4$ particle for both PF and PAL. PF was repeated 36 times to reduce the Monte Carlo variance, but this step was not necessary for PAL due to its lower Monte~Carlo variance. The red line corresponds to equality of the two estimates.'>>=
+<<plot1-100-sim-compare,echo=FALSE, fig.height=4, fig.width=5.5, out.width="4.5in",fig.align="center",fig.cap='Log-likelihood computed using PAL and PF for 100 randomly simulated datasets using the model and parameter values of WWR. Simulations with one or more zero counts were disqualified since they resulted in errors for the PAL implementation of WWR. We used $5 \\times 10^4$ particles for both PF and PAL. PF was repeated 36 times to reduce the Monte Carlo variance, but this step was not necessary for PAL due to its lower Monte~Carlo variance. The red line corresponds to equality of the two estimates.'>>=
 data <- data.frame(
   pfilter = pfilter_ovov_sim_100, 
   palfilter = palfilter_ovov_sim_100
@@ -1102,6 +1103,7 @@ For this simulation study, the particle filter out-performs PAL (Figure~\ref{fig
 On average, the particle filter likelihood estimate is $\Sexpr{myround(mean(pfilter_ovov_sim_100)-mean(palfilter_ovov_sim_100),1)}$ log units higher than the PAL.
 We know from the benchmark AIC value in Table~\ref{tab:ovovrealdata} (comparing line 8 to lines 2--6) that there is substantial model misspecification.
 
+\section{Discussion}
 It is currently unclear why the model of SBH beats the log-ARMA benchmark for their data, whereas the model of WWR fits more poorly than the log-ARMA model for its corresponding data.
 Additional rounds of model development are required to resolve this, for which it is desirable to employ statistical methods that are broadly applicable both in theory and practice.
 Particle filter methods meet this criterion since they have the plug-and-play property \citep{breto09,he10} which is not possessed by PAL.
