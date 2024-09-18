@@ -25,7 +25,7 @@
 
 \title{Poisson approximate likelihood compared to the particle filter}
 \author{Yize Hao, Aaron A. Abkemeier and Edward L. Ionides}
-\date{Draft compiled on \today}
+\date{The University of Michigan}
 \maketitle
 
 \begin{abstract}
