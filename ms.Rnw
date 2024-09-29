@@ -24,21 +24,12 @@
 \begin{document}
 
 \title{Poisson approximate likelihood compared to the particle filter}
-\author{Yize Hao, Aaron A. Abkemeier and Edward L. Ionides}
+\author{Yize Hao, Aaron J. Abkemeier and Edward L. Ionides}
 \date{The University of Michigan}
 \maketitle
 
 \begin{abstract}
-Filtering algorithms are fundamental for inference on partially observed stochastic dynamic systems, since they provide access to the likelihood function and hence enable likelihood-based or Bayesian inference.
-A novel Poisson approximate likelihood (PAL) filter was introduced by \cite{wwr}.
-PAL employs a Poisson approximation to conditional densities, offering a fast approximation to the likelihood function for a certain subset of partially observed Markov process models.
-A central piece of evidence for PAL is the comparison in Table~1 of \cite{wwr}, which claims a large improvement for PAL over a standard particle filter algorithm.
-This evidence, based on a model and data from a previous scientific study by \citet{stocks}, might suggest that researchers confronted with similar models should use PAL rather than particle filter methods.
-Taken at face value, this evidence also reduces the credibility of \cite{stocks} by indicating a shortcoming with the numerical methods that they used.
-However, we show that the comparison of log-likelihood values made by \cite{wwr} is flawed because their PAL calculations were carried out using a dataset scaled differently from the previous study.
-If PAL and the particle filter are applied to the same data, the advantage claimed for PAL disappears.
-On simulations where the model is correctly specified, the particle filter outperforms PAL.
-
+Filtering algorithms are fundamental for inference on partially observed stochastic dynamic systems, since they provide access to the likelihood function and hence enable likelihood-based or Bayesian inference. A novel Poisson approximate likelihood (PAL) filter was introduced by Whitehouse et al. (2023) (henceforth, WWR). PAL employs a Poisson approximation to conditional densities, offering a fast approximation to the likelihood function for a certain subset of partially observed Markov process models. A central piece of evidence for PAL is the comparison in Table 1 of WWR, which claims a large improvement for PAL over a standard particle filter algorithm. This evidence, based on a model and data from a previous scientific study, might suggest that researchers confronted with similar models should use PAL rather than particle filter methods. However, we show that the comparison of log-likelihood values made by WWR is flawed because their PAL calculations were carried out using a dataset scaled differently from the previous study. If PAL and the particle filter are applied to the same data, the advantage claimed for PAL disappears. On simulations where the model is correctly specified, the particle filter outperforms PAL.
 \end{abstract}
 
 <<setup,echo=FALSE,message=FALSE,warning=FALSE>>=
