@@ -24,8 +24,9 @@
 \begin{document}
 
 \title{Poisson approximate likelihood compared to the particle filter}
-\author{Yize Hao, Aaron J. Abkemeier and Edward L. Ionides}
-\date{The University of Michigan}
+\author{Yize Hao, Aaron J. Abkemeier and Edward L. Ionides$^*$}
+\date{The University of Michigan, Michigan, USA\\
+$^*$Correspondence to \texttt{ionides@umich.edu}}
 \maketitle
 
 \begin{abstract}
