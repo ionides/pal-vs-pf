@@ -1,0 +1,20 @@
+
+in pal-vs-pf:
+make -B ms.tex
+cp -r ms.tex bib-pal.bib figure arxiv
+
+## edit ms.tex to remove subdirectory "figure/"
+
+in pal-vs-pf/arxiv:
+cp ../
+
+
+
+pdflatex ms.tex
+bibtex bib-pal.bib
+
+tar cvfz arxiv.tar.gz ms.tex ms.bbl plot1-100-sim-compare-1.pdf
+
+
+
+
